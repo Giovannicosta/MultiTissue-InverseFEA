@@ -577,4 +577,56 @@ for target in target_columns:
     print(f"  RMSE: {rmse:.6f}")
 ```
 
-Next step: determine whether Part1_E becomes identifiable when the model is given known simulation context in addition to PCA geometry.
+Validated simulation-context diagnostic:
+
+```text
+Train with context: (5208, 12)
+Test with context: (1302, 12)
+
+Part1_E
+  R2:   0.0793
+  MAE:  0.014593
+  RMSE: 0.017205
+
+Part3_E
+  R2:   0.9938
+  MAE:  0.004992
+  RMSE: 0.006820
+
+Part11_E
+  R2:   0.9576
+  MAE:  0.006639
+  RMSE: 0.008728
+```
+
+Interpretation:
+- Adding Pressure, Inner_Radius, and Outer_Radius produces essentially no meaningful improvement for Part1_E.
+- Part3_E and Part11_E remain unchanged.
+- The Part1_E problem is therefore not explained by omission of those three context variables.
+
+### Cell 15 - Test raw noisy geometry directly
+
+This diagnostic checks whether Part1_E information is being discarded by PCA at all. Train the same Random Forest on the full 54 noisy geometry coordinates.
+
+```python
+for target in target_columns:
+    model = RandomForestRegressor(
+        n_estimators=100,
+        random_state=42,
+        n_jobs=-1
+    )
+
+    model.fit(X_train_noisy, y_train[target])
+    predictions = model.predict(X_test_noisy)
+
+    r2 = r2_score(y_test[target], predictions)
+    mae = mean_absolute_error(y_test[target], predictions)
+    rmse = mean_squared_error(y_test[target], predictions) ** 0.5
+
+    print(target)
+    print(f"  R2:   {r2:.4f}")
+    print(f"  MAE:  {mae:.6f}")
+    print(f"  RMSE: {rmse:.6f}")
+```
+
+Next step: compare raw 54-coordinate performance against the PCA representations. If Part1_E remains poor, its identifiability problem is deeper than PCA compression.
