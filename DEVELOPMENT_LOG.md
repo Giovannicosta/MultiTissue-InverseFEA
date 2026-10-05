@@ -1157,4 +1157,98 @@ print(f"  MAE:  {mae:.6f}")
 print(f"  RMSE: {rmse:.6f}")
 ```
 
-Next step: compare the augmented Part1_E model against the existing R2 = 0.0781 baseline at noise = 0.05.
+Validated multi-noise augmentation result for Part1_E:
+
+```text
+Part1_E augmented training
+  R2:   0.0626
+  MAE:  0.014469
+  RMSE: 0.017361
+```
+
+A scikit-learn warning was also observed because the Random Forest was fitted on a NumPy array without feature names and then asked to predict from a DataFrame with feature names. This warning does not change the numeric result.
+
+Interpretation:
+- Mixing many training noise levels did not improve the noise = 0.05 test case.
+- R2 decreased slightly from 0.0781 to 0.0626.
+- The likely issue is that the model is being asked to learn one mapping across several different noise distributions, which may blur the already fragile Part1_E signal.
+
+### Cell 22 - Noise-matched augmentation at noise = 0.05
+
+Instead of mixing noise levels, create several independent noise realizations at the same test noise level and train on all of them.
+
+```python
+matched_noise = 0.05
+train_seeds = [42, 52, 62, 72, 82, 92]
+
+matched_features = []
+matched_targets = []
+
+for seed in train_seeds:
+    X_train_level = add_fast_noise(
+        X_train_spline_base,
+        noise_level=matched_noise,
+        seed=seed
+    )
+
+    bottom_level = bottom_pca_clean.transform(
+        X_train_level[bottom_cols]
+    )
+    inner_level = inner_pca_clean.transform(
+        X_train_level[inner_shape_cols]
+    )
+    outer_level = outer_pca_clean.transform(
+        X_train_level[outer_shape_cols]
+    )
+
+    X_level = np.column_stack([
+        bottom_level[:, :3],
+        inner_level[:, :3],
+        outer_level[:, :3]
+    ])
+
+    matched_features.append(X_level)
+    matched_targets.append(
+        y_train["Part1_E"].to_numpy()
+    )
+
+X_train_matched = np.vstack(matched_features)
+y_train_matched = np.concatenate(matched_targets)
+
+matched_model = RandomForestRegressor(
+    n_estimators=200,
+    random_state=42,
+    n_jobs=-1
+)
+
+matched_model.fit(
+    X_train_matched,
+    y_train_matched
+)
+
+matched_pred = matched_model.predict(
+    X_model_test_9.to_numpy()
+)
+
+r2 = r2_score(
+    y_test["Part1_E"],
+    matched_pred
+)
+
+mae = mean_absolute_error(
+    y_test["Part1_E"],
+    matched_pred
+)
+
+rmse = mean_squared_error(
+    y_test["Part1_E"],
+    matched_pred
+) ** 0.5
+
+print("Part1_E matched-noise augmentation")
+print(f"  R2:   {r2:.4f}")
+print(f"  MAE:  {mae:.6f}")
+print(f"  RMSE: {rmse:.6f}")
+```
+
+Next step: determine whether repeated examples from the same noise distribution improve robustness relative to the R2 = 0.0781 single-noise baseline.
