@@ -146,7 +146,7 @@ print("Inner shape columns:", len(inner_shape_cols))
 print("Outer shape columns:", len(outer_shape_cols))
 ```
 
-Expected output:
+Validated output:
 
 ```text
 Bottom columns: 18
@@ -154,4 +154,47 @@ Inner shape columns: 18
 Outer shape columns: 18
 ```
 
-Next step: define the spline-resampling helper and build the clean spline base.
+### Cell 5 - Define spline resampling helpers
+
+```python
+from scipy.interpolate import splprep, splev
+
+def resample_closed_shape(row, shape_x_cols, shape_y_cols):
+    x = row[shape_x_cols].to_numpy(dtype=float)
+    y = row[shape_y_cols].to_numpy(dtype=float)
+
+    tck, _ = splprep([x, y], s=0, per=True)
+
+    u_new = np.linspace(0, 1, 100)
+    x_spline, y_spline = splev(u_new, tck)
+
+    indices = np.linspace(0, 99, 10, endpoint=True).astype(int)
+
+    return x_spline[indices][:9], y_spline[indices][:9]
+
+
+def build_spline_base(X):
+    base = X.copy()
+
+    for idx, row in X.iterrows():
+        inner_x, inner_y = resample_closed_shape(
+            row,
+            inner_shape_cols[:9],
+            inner_shape_cols[9:]
+        )
+
+        outer_x, outer_y = resample_closed_shape(
+            row,
+            outer_shape_cols[:9],
+            outer_shape_cols[9:]
+        )
+
+        base.loc[idx, inner_shape_cols[:9]] = inner_x
+        base.loc[idx, inner_shape_cols[9:]] = inner_y
+        base.loc[idx, outer_shape_cols[:9]] = outer_x
+        base.loc[idx, outer_shape_cols[9:]] = outer_y
+
+    return base
+```
+
+Next step: build and validate the clean spline bases for train and test data.
