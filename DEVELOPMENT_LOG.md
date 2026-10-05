@@ -197,4 +197,23 @@ def build_spline_base(X):
     return base
 ```
 
-Next step: build and validate the clean spline bases for train and test data.
+Validated: Cell 5 ran successfully with no errors.
+
+### Cell 6 - Build clean spline bases
+
+```python
+X_train_spline_base = build_spline_base(X_train)
+X_test_spline_base = build_spline_base(X_test)
+
+print("Train spline base:", X_train_spline_base.shape)
+print("Test spline base:", X_test_spline_base.shape)
+```
+
+Expected output:
+
+```text
+Train spline base: (5208, 54)
+Test spline base: (1302, 54)
+```
+
+Next step: define the fast noise function so noise can be added without recomputing splines.
