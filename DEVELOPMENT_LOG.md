@@ -849,4 +849,116 @@ for noise in noise_levels:
     print(f"  Clean-PCA R2:    {pca_r2:.4f}")
 ```
 
-Next step: determine whether clean-PCA projection meaningfully delays the collapse of Part1_E under noise. If not, investigate a shape-aware denoiser or a model trained explicitly for noise robustness.
+Validated raw-vs-clean-PCA robustness comparison for Part1_E:
+
+```text
+Noise 0.005
+  Raw geometry R2: 0.7093
+  Clean-PCA R2:    0.7909
+
+Noise 0.010
+  Raw geometry R2: 0.4934
+  Clean-PCA R2:    0.6521
+
+Noise 0.020
+  Raw geometry R2: 0.2498
+  Clean-PCA R2:    0.3912
+
+Noise 0.030
+  Raw geometry R2: 0.1390
+  Clean-PCA R2:    0.2280
+
+Noise 0.050
+  Raw geometry R2: 0.0768
+  Clean-PCA R2:    0.0781
+```
+
+Interpretation:
+- Clean-trained PCA projection clearly improves Part1_E robustness at low-to-moderate noise levels.
+- The gain is strongest around noise 0.01 to 0.03.
+- At noise 0.05 the benefit disappears; the signal has been degraded too severely for the current 3-PC-per-group representation to recover it.
+- This supports clean-PCA projection as a useful denoising step, but not as a complete solution for high noise.
+
+### Cell 19 - Compare different PCA dimensionalities for Part1_E
+
+This diagnostic checks whether retaining more clean-trained PCs helps Part1_E under noise, especially around noise = 0.01 and 0.02.
+
+```python
+from sklearn.decomposition import PCA
+
+def fit_clean_pca_n(X_clean, cols, n_components):
+    pipeline = Pipeline([
+        ("center", StandardScaler(with_std=False)),
+        ("pca", PCA(n_components=n_components))
+    ])
+    pipeline.fit(X_clean[cols])
+    return pipeline
+
+noise_levels = [0.01, 0.02]
+component_counts = [1, 2, 3, 5, 9, 18]
+
+for noise in noise_levels:
+    print(f"\n========== Noise {noise:.3f} ==========")
+
+    X_train_level = add_fast_noise(
+        X_train_spline_base,
+        noise_level=noise,
+        seed=42
+    )
+    X_test_level = add_fast_noise(
+        X_test_spline_base,
+        noise_level=noise,
+        seed=43
+    )
+
+    for n in component_counts:
+        bottom_pca_n = fit_clean_pca_n(
+            X_train_spline_base,
+            bottom_cols,
+            n
+        )
+        inner_pca_n = fit_clean_pca_n(
+            X_train_spline_base,
+            inner_shape_cols,
+            n
+        )
+        outer_pca_n = fit_clean_pca_n(
+            X_train_spline_base,
+            outer_shape_cols,
+            n
+        )
+
+        train_features = np.column_stack([
+            bottom_pca_n.transform(X_train_level[bottom_cols]),
+            inner_pca_n.transform(X_train_level[inner_shape_cols]),
+            outer_pca_n.transform(X_train_level[outer_shape_cols])
+        ])
+
+        test_features = np.column_stack([
+            bottom_pca_n.transform(X_test_level[bottom_cols]),
+            inner_pca_n.transform(X_test_level[inner_shape_cols]),
+            outer_pca_n.transform(X_test_level[outer_shape_cols])
+        ])
+
+        model = RandomForestRegressor(
+            n_estimators=100,
+            random_state=42,
+            n_jobs=-1
+        )
+
+        model.fit(
+            train_features,
+            y_train["Part1_E"]
+        )
+
+        pred = model.predict(test_features)
+
+        r2 = r2_score(
+            y_test["Part1_E"],
+            pred
+        )
+
+        print(f"{n:>2} PCs per group -> R2: {r2:.4f}")
+```
+
+Next step: use the dimensionality sweep to identify whether Part1_E benefits from retaining weaker clean-shape modes or whether the current noise model is already destroying those modes.
