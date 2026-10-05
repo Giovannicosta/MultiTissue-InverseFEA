@@ -428,4 +428,77 @@ for target in target_columns:
     print(f"  RMSE: {rmse:.6f}")
 ```
 
-Next step: evaluate the three target metrics and decide whether the 4-feature representation is sufficiently predictive before comparing additional PCA feature combinations.
+Validated baseline results for the 4-feature representation:
+
+```text
+Part1_E
+  R2:   -0.0422
+  MAE:  0.015607
+  RMSE: 0.018305
+
+Part3_E
+  R2:   0.9946
+  MAE:  0.004655
+  RMSE: 0.006378
+
+Part11_E
+  R2:   0.9561
+  MAE:  0.006744
+  RMSE: 0.008884
+```
+
+Interpretation:
+- The compact PCA representation is extremely predictive for `Part3_E`.
+- It is also strongly predictive for `Part11_E`.
+- It does not currently recover `Part1_E` (negative R2), indicating that the dominant PCs retained so far likely omit information needed for that target, or that Part1_E is less identifiable from these geometry features alone.
+
+### Cell 13 - Test all 9 retained PCA components
+
+This diagnostic checks whether Part1_E information is present in the first three clean PCA components of each geometry group, but was lost by reducing to four features.
+
+```python
+X_model_train_9 = pd.DataFrame({
+    "Bottom_PC1": bottom_train_scores[:, 0],
+    "Bottom_PC2": bottom_train_scores[:, 1],
+    "Bottom_PC3": bottom_train_scores[:, 2],
+    "Inner_PC1": inner_train_scores[:, 0],
+    "Inner_PC2": inner_train_scores[:, 1],
+    "Inner_PC3": inner_train_scores[:, 2],
+    "Outer_PC1": outer_train_scores[:, 0],
+    "Outer_PC2": outer_train_scores[:, 1],
+    "Outer_PC3": outer_train_scores[:, 2]
+}, index=X_train.index)
+
+X_model_test_9 = pd.DataFrame({
+    "Bottom_PC1": bottom_test_scores[:, 0],
+    "Bottom_PC2": bottom_test_scores[:, 1],
+    "Bottom_PC3": bottom_test_scores[:, 2],
+    "Inner_PC1": inner_test_scores[:, 0],
+    "Inner_PC2": inner_test_scores[:, 1],
+    "Inner_PC3": inner_test_scores[:, 2],
+    "Outer_PC1": outer_test_scores[:, 0],
+    "Outer_PC2": outer_test_scores[:, 1],
+    "Outer_PC3": outer_test_scores[:, 2]
+}, index=X_test.index)
+
+for target in target_columns:
+    model = RandomForestRegressor(
+        n_estimators=100,
+        random_state=42,
+        n_jobs=-1
+    )
+
+    model.fit(X_model_train_9, y_train[target])
+    predictions = model.predict(X_model_test_9)
+
+    r2 = r2_score(y_test[target], predictions)
+    mae = mean_absolute_error(y_test[target], predictions)
+    rmse = mean_squared_error(y_test[target], predictions) ** 0.5
+
+    print(target)
+    print(f"  R2:   {r2:.4f}")
+    print(f"  MAE:  {mae:.6f}")
+    print(f"  RMSE: {rmse:.6f}")
+```
+
+Next step: compare the 9-feature results against the 4-feature baseline, especially for Part1_E.
