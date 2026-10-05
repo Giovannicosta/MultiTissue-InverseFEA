@@ -1048,4 +1048,113 @@ for target in target_columns:
     print(f"  RMSE: {rmse:.6f}")
 ```
 
-Next step: use the target-specific baseline as the first specialist-expert design, then test whether training on multiple noise levels improves Part1_E robustness.
+Validated target-specific specialist baseline:
+
+```text
+Part1_E
+  Features: 9
+  R2:   0.0781
+  MAE:  0.014600
+  RMSE: 0.017216
+
+Part3_E
+  Features: 4
+  R2:   0.9946
+  MAE:  0.004655
+  RMSE: 0.006378
+
+Part11_E
+  Features: 4
+  R2:   0.9561
+  MAE:  0.006744
+  RMSE: 0.008884
+```
+
+Interpretation:
+- The target-specific feature selection reproduces the earlier baselines as expected.
+- Part3_E and Part11_E are already strong with the compact 4-feature representation.
+- Part1_E remains the unresolved target and requires a robustness strategy rather than simply more PCA components.
+- This establishes a clean specialist baseline before introducing noise-augmented training.
+
+### Cell 21 - Train Part1_E with multiple noise levels
+
+This experiment augments the Part1_E training data using several noise levels while keeping the test set fixed at noise = 0.05.
+
+```python
+train_noise_levels = [0.0, 0.005, 0.01, 0.02, 0.03, 0.05]
+
+augmented_features = []
+augmented_targets = []
+
+for noise in train_noise_levels:
+    if noise == 0.0:
+        X_train_level = X_train_spline_base
+    else:
+        X_train_level = add_fast_noise(
+            X_train_spline_base,
+            noise_level=noise,
+            seed=42 + int(noise * 1000)
+        )
+
+    bottom_level = bottom_pca_clean.transform(
+        X_train_level[bottom_cols]
+    )
+    inner_level = inner_pca_clean.transform(
+        X_train_level[inner_shape_cols]
+    )
+    outer_level = outer_pca_clean.transform(
+        X_train_level[outer_shape_cols]
+    )
+
+    X_level = np.column_stack([
+        bottom_level[:, :3],
+        inner_level[:, :3],
+        outer_level[:, :3]
+    ])
+
+    augmented_features.append(X_level)
+    augmented_targets.append(y_train["Part1_E"].to_numpy())
+
+X_train_augmented = np.vstack(augmented_features)
+y_train_augmented = np.concatenate(augmented_targets)
+
+print("Augmented train:", X_train_augmented.shape)
+print("Augmented targets:", y_train_augmented.shape)
+
+part1_aug_model = RandomForestRegressor(
+    n_estimators=200,
+    random_state=42,
+    n_jobs=-1
+)
+
+part1_aug_model.fit(
+    X_train_augmented,
+    y_train_augmented
+)
+
+part1_test_pred = part1_aug_model.predict(
+    X_model_test_9
+)
+
+r2 = r2_score(
+    y_test["Part1_E"],
+    part1_test_pred
+)
+
+mae = mean_absolute_error(
+    y_test["Part1_E"],
+    part1_test_pred
+)
+
+rmse = mean_squared_error(
+    y_test["Part1_E"],
+    part1_test_pred
+) ** 0.5
+
+print(f"Part1_E augmented training")
+print(f"  R2:   {r2:.4f}")
+print(f"  MAE:  {mae:.6f}")
+print(f"  RMSE: {rmse:.6f}")
+```
+
+Next step: compare the augmented Part1_E model against the existing R2 = 0.0781 baseline at noise = 0.05.
