@@ -629,4 +629,53 @@ for target in target_columns:
     print(f"  RMSE: {rmse:.6f}")
 ```
 
-Next step: compare raw 54-coordinate performance against the PCA representations. If Part1_E remains poor, its identifiability problem is deeper than PCA compression.
+Validated raw-geometry baseline:
+
+```text
+Part1_E
+  R2:   0.0768
+  MAE:  0.014744
+  RMSE: 0.017228
+
+Part3_E
+  R2:   0.9948
+  MAE:  0.004532
+  RMSE: 0.006233
+
+Part11_E
+  R2:   0.9411
+  MAE:  0.008051
+  RMSE: 0.010288
+```
+
+Interpretation:
+- Part1_E remains poorly predicted even with all 54 noisy geometry coordinates, so PCA compression is not the main cause.
+- Part3_E remains extremely predictable from noisy geometry.
+- Part11_E performs slightly worse with raw geometry than with the compact PCA representation, suggesting the clean-PCA projection may be filtering harmful noise.
+
+### Cell 16 - Test Part1_E on clean geometry
+
+This diagnostic removes measurement noise entirely. If Part1_E is still poorly predicted, the issue is likely identifiability from geometry rather than noise.
+
+```python
+for target in target_columns:
+    model = RandomForestRegressor(
+        n_estimators=100,
+        random_state=42,
+        n_jobs=-1
+    )
+
+    model.fit(X_train_spline_base, y_train[target])
+    predictions = model.predict(X_test_spline_base)
+
+    r2 = r2_score(y_test[target], predictions)
+    mae = mean_absolute_error(y_test[target], predictions)
+    rmse = mean_squared_error(y_test[target], predictions) ** 0.5
+
+    print(target)
+    print(f"  R2:   {r2:.4f}")
+    print(f"  MAE:  {mae:.6f}")
+    print(f"  RMSE: {rmse:.6f}")
+```
+
+Next step: compare clean-geometry performance with noisy-geometry performance, especially for Part1_E.
