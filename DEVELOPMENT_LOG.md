@@ -306,4 +306,50 @@ outer_pca_clean = fit_clean_pca(
 print("PCA models fitted.")
 ```
 
-Next step: project noisy train/test observations into the fixed PCA spaces learned from clean training data.
+Validated output:
+
+```text
+PCA models fitted.
+```
+
+### Cell 10 - Project noisy train/test data into the fixed clean PCA spaces
+
+```python
+bottom_train_scores = bottom_pca_clean.transform(
+    X_train_noisy[bottom_cols]
+)
+
+bottom_test_scores = bottom_pca_clean.transform(
+    X_test_noisy[bottom_cols]
+)
+
+inner_train_scores = inner_pca_clean.transform(
+    X_train_noisy[inner_shape_cols]
+)
+
+inner_test_scores = inner_pca_clean.transform(
+    X_test_noisy[inner_shape_cols]
+)
+
+outer_train_scores = outer_pca_clean.transform(
+    X_train_noisy[outer_shape_cols]
+)
+
+outer_test_scores = outer_pca_clean.transform(
+    X_test_noisy[outer_shape_cols]
+)
+
+print("Bottom train/test:", bottom_train_scores.shape, bottom_test_scores.shape)
+print("Inner train/test:", inner_train_scores.shape, inner_test_scores.shape)
+print("Outer train/test:", outer_train_scores.shape, outer_test_scores.shape)
+```
+
+Expected output:
+
+```text
+Bottom train/test: (5208, 3) (1302, 3)
+Inner train/test: (5208, 3) (1302, 3)
+Outer train/test: (5208, 3) (1302, 3)
+```
+
+Next step: build the first 4-feature candidate representation: Bottom PC1+PC2, Inner PC1, Outer PC1.
