@@ -742,4 +742,111 @@ for noise in noise_levels:
     print(f"  MAE: {mae:.6f}")
 ```
 
-Next step: identify the noise level at which Part1_E performance collapses, then decide whether denoising, lower-noise simulation, or a more robust representation is needed.
+Validated Part1_E noise-sensitivity sweep:
+
+```text
+Noise 0.000
+  R2:  0.9896
+  MAE: 0.001313
+Noise 0.005
+  R2:  0.7093
+  MAE: 0.007898
+Noise 0.010
+  R2:  0.4934
+  MAE: 0.010506
+Noise 0.020
+  R2:  0.2498
+  MAE: 0.012991
+Noise 0.030
+  R2:  0.1390
+  MAE: 0.014137
+Noise 0.050
+  R2:  0.0768
+  MAE: 0.014744
+```
+
+Interpretation:
+- Part1_E performance degrades very rapidly even at small noise levels.
+- R2 falls from 0.9896 with clean geometry to 0.7093 at noise 0.005 and below 0.5 by noise 0.01.
+- This confirms Part1_E depends on subtle geometry information that the current independent coordinate-noise model quickly destroys.
+- The next priority should be testing a denoising/projection strategy rather than simply increasing model complexity.
+
+### Cell 18 - Compare raw noisy geometry vs clean-PCA projection for Part1_E across noise levels
+
+This experiment tests whether projecting noisy observations into PCA spaces learned from clean geometry improves robustness.
+
+```python
+noise_levels = [0.005, 0.01, 0.02, 0.03, 0.05]
+
+for noise in noise_levels:
+    X_train_level = add_fast_noise(
+        X_train_spline_base,
+        noise_level=noise,
+        seed=42
+    )
+
+    X_test_level = add_fast_noise(
+        X_test_spline_base,
+        noise_level=noise,
+        seed=43
+    )
+
+    # Raw noisy geometry
+    raw_model = RandomForestRegressor(
+        n_estimators=100,
+        random_state=42,
+        n_jobs=-1
+    )
+    raw_model.fit(X_train_level, y_train["Part1_E"])
+    raw_pred = raw_model.predict(X_test_level)
+    raw_r2 = r2_score(y_test["Part1_E"], raw_pred)
+
+    # Project noisy data into fixed clean PCA spaces
+    bottom_train_level = bottom_pca_clean.transform(
+        X_train_level[bottom_cols]
+    )
+    bottom_test_level = bottom_pca_clean.transform(
+        X_test_level[bottom_cols]
+    )
+
+    inner_train_level = inner_pca_clean.transform(
+        X_train_level[inner_shape_cols]
+    )
+    inner_test_level = inner_pca_clean.transform(
+        X_test_level[inner_shape_cols]
+    )
+
+    outer_train_level = outer_pca_clean.transform(
+        X_train_level[outer_shape_cols]
+    )
+    outer_test_level = outer_pca_clean.transform(
+        X_test_level[outer_shape_cols]
+    )
+
+    X_train_pca_level = np.column_stack([
+        bottom_train_level[:, :3],
+        inner_train_level[:, :3],
+        outer_train_level[:, :3]
+    ])
+
+    X_test_pca_level = np.column_stack([
+        bottom_test_level[:, :3],
+        inner_test_level[:, :3],
+        outer_test_level[:, :3]
+    ])
+
+    pca_model = RandomForestRegressor(
+        n_estimators=100,
+        random_state=42,
+        n_jobs=-1
+    )
+    pca_model.fit(X_train_pca_level, y_train["Part1_E"])
+    pca_pred = pca_model.predict(X_test_pca_level)
+    pca_r2 = r2_score(y_test["Part1_E"], pca_pred)
+
+    print(f"Noise {noise:.3f}")
+    print(f"  Raw geometry R2: {raw_r2:.4f}")
+    print(f"  Clean-PCA R2:    {pca_r2:.4f}")
+```
+
+Next step: determine whether clean-PCA projection meaningfully delays the collapse of Part1_E under noise. If not, investigate a shape-aware denoiser or a model trained explicitly for noise robustness.
