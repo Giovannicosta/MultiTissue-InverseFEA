@@ -241,4 +241,32 @@ def add_fast_noise(X_base, noise_level=0.05, seed=42):
     return noisy
 ```
 
-Next step: create noisy train/test observations from the cached spline bases.
+Validated: Cell 7 ran successfully with no errors.
+
+### Cell 8 - Create noisy train/test observations
+
+```python
+X_train_noisy = add_fast_noise(
+    X_train_spline_base,
+    noise_level=0.05,
+    seed=42
+)
+
+X_test_noisy = add_fast_noise(
+    X_test_spline_base,
+    noise_level=0.05,
+    seed=43
+)
+
+print("Noisy train:", X_train_noisy.shape)
+print("Noisy test:", X_test_noisy.shape)
+```
+
+Expected output:
+
+```text
+Noisy train: (5208, 54)
+Noisy test: (1302, 54)
+```
+
+Next step: fit clean-training PCA models for Bottom, Inner Shape, and Outer Shape.
