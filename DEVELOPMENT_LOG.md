@@ -114,7 +114,7 @@ print("y_train:", y_train.shape)
 print("y_test:", y_test.shape)
 ```
 
-Expected output:
+Validated output:
 
 ```text
 X_train: (5208, 54)
@@ -123,4 +123,35 @@ y_train: (5208, 3)
 y_test: (1302, 3)
 ```
 
-Next step: define the geometry column groups used by spline preprocessing and PCA.
+### Cell 4 - Define geometry groups
+
+```python
+bottom_cols = (
+    [f"inner_y{i}" for i in range(1, 10)] +
+    [f"inner_z{i}" for i in range(1, 10)]
+)
+
+inner_shape_cols = (
+    [f"innerShape_x{i}" for i in range(1, 10)] +
+    [f"innerShape_y{i}" for i in range(1, 10)]
+)
+
+outer_shape_cols = (
+    [f"outerShape_x{i}" for i in range(1, 10)] +
+    [f"outerShape_y{i}" for i in range(1, 10)]
+)
+
+print("Bottom columns:", len(bottom_cols))
+print("Inner shape columns:", len(inner_shape_cols))
+print("Outer shape columns:", len(outer_shape_cols))
+```
+
+Expected output:
+
+```text
+Bottom columns: 18
+Inner shape columns: 18
+Outer shape columns: 18
+```
+
+Next step: define the spline-resampling helper and build the clean spline base.
