@@ -961,4 +961,91 @@ for noise in noise_levels:
         print(f"{n:>2} PCs per group -> R2: {r2:.4f}")
 ```
 
-Next step: use the dimensionality sweep to identify whether Part1_E benefits from retaining weaker clean-shape modes or whether the current noise model is already destroying those modes.
+Validated PCA dimensionality sweep for Part1_E:
+
+```text
+========== Noise 0.010 ==========
+ 1 PCs per group -> R2: -0.0954
+ 2 PCs per group -> R2: 0.6280
+ 3 PCs per group -> R2: 0.6521
+ 5 PCs per group -> R2: 0.6421
+ 9 PCs per group -> R2: 0.6308
+18 PCs per group -> R2: 0.6093
+
+========== Noise 0.020 ==========
+ 1 PCs per group -> R2: -0.0738
+ 2 PCs per group -> R2: 0.3319
+ 3 PCs per group -> R2: 0.3912
+ 5 PCs per group -> R2: 0.3869
+ 9 PCs per group -> R2: 0.3817
+18 PCs per group -> R2: 0.3710
+```
+
+Interpretation:
+- One PC per geometry group is insufficient for Part1_E.
+- Three PCs per group performs best at both tested noise levels.
+- Keeping more than three PCs slightly hurts performance, consistent with weaker PCs carrying more noise than useful signal.
+- This supports a target-specific representation for Part1_E: clean-trained PCA with approximately three components per geometry group.
+- The earlier 4-feature representation is still attractive for Part3_E and Part11_E, but Part1_E clearly benefits from a richer 9-feature PCA representation.
+
+### Cell 20 - Compare target-specific PCA feature sets
+
+Use 9 PCA features for Part1_E and the compact 4-feature representation for Part3_E and Part11_E.
+
+```python
+target_feature_sets = {
+    "Part1_E": (
+        X_model_train_9,
+        X_model_test_9
+    ),
+    "Part3_E": (
+        X_model_train,
+        X_model_test
+    ),
+    "Part11_E": (
+        X_model_train,
+        X_model_test
+    )
+}
+
+for target in target_columns:
+    X_train_target, X_test_target = target_feature_sets[target]
+
+    model = RandomForestRegressor(
+        n_estimators=100,
+        random_state=42,
+        n_jobs=-1
+    )
+
+    model.fit(
+        X_train_target,
+        y_train[target]
+    )
+
+    predictions = model.predict(
+        X_test_target
+    )
+
+    r2 = r2_score(
+        y_test[target],
+        predictions
+    )
+
+    mae = mean_absolute_error(
+        y_test[target],
+        predictions
+    )
+
+    rmse = mean_squared_error(
+        y_test[target],
+        predictions
+    ) ** 0.5
+
+    print(target)
+    print(f"  Features: {X_train_target.shape[1]}")
+    print(f"  R2:   {r2:.4f}")
+    print(f"  MAE:  {mae:.6f}")
+    print(f"  RMSE: {rmse:.6f}")
+```
+
+Next step: use the target-specific baseline as the first specialist-expert design, then test whether training on multiple noise levels improves Part1_E robustness.
