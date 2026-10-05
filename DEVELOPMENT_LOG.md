@@ -209,11 +209,36 @@ print("Train spline base:", X_train_spline_base.shape)
 print("Test spline base:", X_test_spline_base.shape)
 ```
 
-Expected output:
+Validated output:
 
 ```text
 Train spline base: (5208, 54)
 Test spline base: (1302, 54)
 ```
 
-Next step: define the fast noise function so noise can be added without recomputing splines.
+### Cell 7 - Define fast noise injection
+
+```python
+def add_fast_noise(X_base, noise_level=0.05, seed=42):
+    rng = np.random.default_rng(seed)
+    noisy = X_base.copy()
+
+    # Bottom geometry uses small uniform measurement noise.
+    noisy[bottom_cols] += rng.uniform(
+        -0.01,
+        0.01,
+        size=noisy[bottom_cols].shape
+    )
+
+    # Inner and outer shapes use Gaussian coordinate noise.
+    shape_cols = inner_shape_cols + outer_shape_cols
+    noisy[shape_cols] += rng.normal(
+        0,
+        noise_level,
+        size=noisy[shape_cols].shape
+    )
+
+    return noisy
+```
+
+Next step: create noisy train/test observations from the cached spline bases.
