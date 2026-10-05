@@ -87,11 +87,40 @@ print("Missing input values:", X.isna().sum().sum())
 print("Missing target values:", y.isna().sum().sum())
 ```
 
-Expected shapes:
+Validated output:
 
 ```text
 Geometry inputs: (6510, 54)
 Targets: (6510, 3)
+Missing input values: 0
+Missing target values: 0
 ```
 
-Next step: validate missing values and create the reproducible train/test split.
+### Cell 3 - Reproducible train/test split
+
+```python
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.20,
+    random_state=42
+)
+
+print("X_train:", X_train.shape)
+print("X_test:", X_test.shape)
+print("y_train:", y_train.shape)
+print("y_test:", y_test.shape)
+```
+
+Expected output:
+
+```text
+X_train: (5208, 54)
+X_test: (1302, 54)
+y_train: (5208, 3)
+y_test: (1302, 3)
+```
+
+Next step: define the geometry column groups used by spline preprocessing and PCA.
