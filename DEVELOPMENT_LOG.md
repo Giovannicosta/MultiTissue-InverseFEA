@@ -9,7 +9,7 @@ The project is being rebuilt as a cleaner inverse FEA pipeline that can later su
 ### Validated preprocessing findings
 
 - Source dataset: `Spring_25/2025_4_14_intermediate.csv` from `SomeoneJN/BME_Muscle_Strength_Prediction_FA25`.
-- Dataset size: 6,510 rows.
+- Dataset size: 6,510 rows and 99 columns.
 - Variable material-property targets:
   - `Part1_E`
   - `Part3_E`
@@ -54,4 +54,44 @@ print("Dataset shape:", df.shape)
 df.head()
 ```
 
-Next step: define the three regression targets and the 54 geometry feature columns.
+Validated output:
+
+```text
+Dataset shape: (6510, 99)
+```
+
+### Cell 2 - Define regression targets and geometry features
+
+```python
+target_columns = [
+    "Part1_E",
+    "Part3_E",
+    "Part11_E"
+]
+
+feature_columns = (
+    [f"inner_y{i}" for i in range(1, 10)] +
+    [f"inner_z{i}" for i in range(1, 10)] +
+    [f"innerShape_x{i}" for i in range(1, 10)] +
+    [f"innerShape_y{i}" for i in range(1, 10)] +
+    [f"outerShape_x{i}" for i in range(1, 10)] +
+    [f"outerShape_y{i}" for i in range(1, 10)]
+)
+
+X = df[feature_columns].copy()
+y = df[target_columns].copy()
+
+print("Geometry inputs:", X.shape)
+print("Targets:", y.shape)
+print("Missing input values:", X.isna().sum().sum())
+print("Missing target values:", y.isna().sum().sum())
+```
+
+Expected shapes:
+
+```text
+Geometry inputs: (6510, 54)
+Targets: (6510, 3)
+```
+
+Next step: validate missing values and create the reproducible train/test split.
