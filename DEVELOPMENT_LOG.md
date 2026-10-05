@@ -1251,4 +1251,70 @@ print(f"  MAE:  {mae:.6f}")
 print(f"  RMSE: {rmse:.6f}")
 ```
 
-Next step: determine whether repeated examples from the same noise distribution improve robustness relative to the R2 = 0.0781 single-noise baseline.
+Validated matched-noise augmentation result for Part1_E:
+
+```text
+Part1_E matched-noise augmentation
+  R2:   0.1004
+  MAE:  0.014361
+  RMSE: 0.017006
+```
+
+Interpretation:
+- Matched-noise augmentation improves Part1_E slightly over the single-noise baseline (R2 = 0.0781 -> 0.1004).
+- It also outperforms mixed-noise augmentation (R2 = 0.0626).
+- The gain is real but modest, so augmentation alone is not enough to recover the strong clean-geometry signal at noise = 0.05.
+- This suggests the next priority should be changing the representation/denoising strategy, not simply adding more noisy copies.
+
+### Cell 23 - Test target-specific clean-PCA dimensionality at noise = 0.05
+
+Because three PCs per group was best at lower noise, test whether asymmetric component counts help at the harder 0.05 noise level.
+
+```python
+configs = [
+    (2, 1, 1),
+    (2, 2, 2),
+    (3, 2, 2),
+    (3, 3, 3),
+    (5, 3, 3),
+    (5, 5, 5)
+]
+
+for bottom_n, inner_n, outer_n in configs:
+    train_features = np.column_stack([
+        bottom_train_scores[:, :bottom_n],
+        inner_train_scores[:, :inner_n],
+        outer_train_scores[:, :outer_n]
+    ])
+
+    test_features = np.column_stack([
+        bottom_test_scores[:, :bottom_n],
+        inner_test_scores[:, :inner_n],
+        outer_test_scores[:, :outer_n]
+    ])
+
+    model = RandomForestRegressor(
+        n_estimators=200,
+        random_state=42,
+        n_jobs=-1
+    )
+
+    model.fit(
+        train_features,
+        y_train["Part1_E"]
+    )
+
+    pred = model.predict(test_features)
+
+    r2 = r2_score(
+        y_test["Part1_E"],
+        pred
+    )
+
+    print(
+        f"Bottom {bottom_n}, Inner {inner_n}, Outer {outer_n} "
+        f"-> R2: {r2:.4f}"
+    )
+```
+
+Next step: use this asymmetric sweep to see whether Part1_E benefits from preserving more information in one geometry region than the others at noise = 0.05.
