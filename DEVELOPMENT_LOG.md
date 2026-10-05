@@ -262,11 +262,48 @@ print("Noisy train:", X_train_noisy.shape)
 print("Noisy test:", X_test_noisy.shape)
 ```
 
-Expected output:
+Validated output:
 
 ```text
 Noisy train: (5208, 54)
 Noisy test: (1302, 54)
 ```
 
-Next step: fit clean-training PCA models for Bottom, Inner Shape, and Outer Shape.
+### Cell 9 - Fit PCA on clean training geometry only
+
+```python
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+def fit_clean_pca(X_clean, cols, n_components=3):
+    pipeline = Pipeline([
+        ("center", StandardScaler(with_std=False)),
+        ("pca", PCA(n_components=n_components))
+    ])
+
+    pipeline.fit(X_clean[cols])
+    return pipeline
+
+bottom_pca_clean = fit_clean_pca(
+    X_train_spline_base,
+    bottom_cols,
+    n_components=3
+)
+
+inner_pca_clean = fit_clean_pca(
+    X_train_spline_base,
+    inner_shape_cols,
+    n_components=3
+)
+
+outer_pca_clean = fit_clean_pca(
+    X_train_spline_base,
+    outer_shape_cols,
+    n_components=3
+)
+
+print("PCA models fitted.")
+```
+
+Next step: project noisy train/test observations into the fixed PCA spaces learned from clean training data.
