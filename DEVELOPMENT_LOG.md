@@ -501,4 +501,80 @@ for target in target_columns:
     print(f"  RMSE: {rmse:.6f}")
 ```
 
-Next step: compare the 9-feature results against the 4-feature baseline, especially for Part1_E.
+Validated 9-feature diagnostic results:
+
+```text
+Part1_E
+  R2:   0.0781
+  MAE:  0.014600
+  RMSE: 0.017216
+
+Part3_E
+  R2:   0.9938
+  MAE:  0.004995
+  RMSE: 0.006819
+
+Part11_E
+  R2:   0.9576
+  MAE:  0.006643
+  RMSE: 0.008732
+```
+
+Comparison with the 4-feature representation:
+- Part1_E improves slightly from R2 = -0.0422 to R2 = 0.0781, but remains poorly predicted.
+- Part3_E remains essentially unchanged and excellent.
+- Part11_E remains essentially unchanged and strong.
+
+Interpretation:
+- Adding PC2/PC3 from Inner and Outer plus Bottom PC3 does not recover enough information to solve Part1_E.
+- The failure is therefore not primarily caused by reducing from 9 PCA features to 4.
+- Part1_E may depend on information outside the current geometry-only PCA representation, possibly raw low-variance geometric detail or known simulation/boundary-condition variables such as Pressure, Inner_Radius, or Outer_Radius.
+
+### Cell 14 - Test whether known simulation parameters help Part1_E
+
+Add the known simulation parameters to the 9-PC representation as a diagnostic:
+
+```python
+context_cols = [
+    "Pressure",
+    "Inner_Radius",
+    "Outer_Radius"
+]
+
+X_context_train = df.loc[X_train.index, context_cols]
+X_context_test = df.loc[X_test.index, context_cols]
+
+X_model_train_context = pd.concat([
+    X_model_train_9,
+    X_context_train
+], axis=1)
+
+X_model_test_context = pd.concat([
+    X_model_test_9,
+    X_context_test
+], axis=1)
+
+print("Train with context:", X_model_train_context.shape)
+print("Test with context:", X_model_test_context.shape)
+
+for target in target_columns:
+    model = RandomForestRegressor(
+        n_estimators=100,
+        random_state=42,
+        n_jobs=-1
+    )
+
+    model.fit(X_model_train_context, y_train[target])
+    predictions = model.predict(X_model_test_context)
+
+    r2 = r2_score(y_test[target], predictions)
+    mae = mean_absolute_error(y_test[target], predictions)
+    rmse = mean_squared_error(y_test[target], predictions) ** 0.5
+
+    print(target)
+    print(f"  R2:   {r2:.4f}")
+    print(f"  MAE:  {mae:.6f}")
+    print(f"  RMSE: {rmse:.6f}")
+```
+
+Next step: determine whether Part1_E becomes identifiable when the model is given known simulation context in addition to PCA geometry.
