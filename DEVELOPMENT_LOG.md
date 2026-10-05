@@ -344,7 +344,7 @@ print("Inner train/test:", inner_train_scores.shape, inner_test_scores.shape)
 print("Outer train/test:", outer_train_scores.shape, outer_test_scores.shape)
 ```
 
-Expected output:
+Validated output:
 
 ```text
 Bottom train/test: (5208, 3) (1302, 3)
@@ -352,4 +352,33 @@ Inner train/test: (5208, 3) (1302, 3)
 Outer train/test: (5208, 3) (1302, 3)
 ```
 
-Next step: build the first 4-feature candidate representation: Bottom PC1+PC2, Inner PC1, Outer PC1.
+### Cell 11 - Build the first compact 4-feature representation
+
+```python
+X_model_train = pd.DataFrame({
+    "Bottom_PC1": bottom_train_scores[:, 0],
+    "Bottom_PC2": bottom_train_scores[:, 1],
+    "Inner_PC1": inner_train_scores[:, 0],
+    "Outer_PC1": outer_train_scores[:, 0]
+}, index=X_train.index)
+
+X_model_test = pd.DataFrame({
+    "Bottom_PC1": bottom_test_scores[:, 0],
+    "Bottom_PC2": bottom_test_scores[:, 1],
+    "Inner_PC1": inner_test_scores[:, 0],
+    "Outer_PC1": outer_test_scores[:, 0]
+}, index=X_test.index)
+
+print("Model train:", X_model_train.shape)
+print("Model test:", X_model_test.shape)
+print(X_model_train.head())
+```
+
+Expected output:
+
+```text
+Model train: (5208, 4)
+Model test: (1302, 4)
+```
+
+Next step: train baseline Random Forest regressors for Part1_E, Part3_E, and Part11_E using the 4-feature representation.
