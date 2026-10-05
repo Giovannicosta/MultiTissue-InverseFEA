@@ -678,4 +678,68 @@ for target in target_columns:
     print(f"  RMSE: {rmse:.6f}")
 ```
 
-Next step: compare clean-geometry performance with noisy-geometry performance, especially for Part1_E.
+Validated clean-geometry baseline:
+
+```text
+Part1_E
+  R2:   0.9896
+  MAE:  0.001313
+  RMSE: 0.001830
+
+Part3_E
+  R2:   0.9999
+  MAE:  0.000483
+  RMSE: 0.000647
+
+Part11_E
+  R2:   0.9983
+  MAE:  0.001166
+  RMSE: 0.001744
+```
+
+Interpretation:
+- Part1_E is highly identifiable from clean geometry (R2 = 0.9896).
+- Its failure under noisy geometry is therefore caused by noise sensitivity rather than an inherent lack of geometric information.
+- Part3_E and Part11_E are far more robust to the current noise model.
+- This suggests Part1_E depends on subtler geometric features that are being obscured by the injected noise.
+
+### Cell 17 - Measure Part1_E sensitivity across noise levels
+
+```python
+noise_levels = [0.0, 0.005, 0.01, 0.02, 0.03, 0.05]
+
+for noise in noise_levels:
+    if noise == 0.0:
+        X_train_level = X_train_spline_base
+        X_test_level = X_test_spline_base
+    else:
+        X_train_level = add_fast_noise(
+            X_train_spline_base,
+            noise_level=noise,
+            seed=42
+        )
+
+        X_test_level = add_fast_noise(
+            X_test_spline_base,
+            noise_level=noise,
+            seed=43
+        )
+
+    model = RandomForestRegressor(
+        n_estimators=100,
+        random_state=42,
+        n_jobs=-1
+    )
+
+    model.fit(X_train_level, y_train["Part1_E"])
+    predictions = model.predict(X_test_level)
+
+    r2 = r2_score(y_test["Part1_E"], predictions)
+    mae = mean_absolute_error(y_test["Part1_E"], predictions)
+
+    print(f"Noise {noise:.3f}")
+    print(f"  R2:  {r2:.4f}")
+    print(f"  MAE: {mae:.6f}")
+```
+
+Next step: identify the noise level at which Part1_E performance collapses, then decide whether denoising, lower-noise simulation, or a more robust representation is needed.
