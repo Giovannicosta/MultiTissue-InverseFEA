@@ -374,11 +374,58 @@ print("Model test:", X_model_test.shape)
 print(X_model_train.head())
 ```
 
-Expected output:
+Validated output:
 
 ```text
 Model train: (5208, 4)
 Model test: (1302, 4)
 ```
 
-Next step: train baseline Random Forest regressors for Part1_E, Part3_E, and Part11_E using the 4-feature representation.
+The compact representation uses:
+- Bottom PC1
+- Bottom PC2
+- Inner PC1
+- Outer PC1
+
+This reduces the model input from 54 raw geometry coordinates to 4 PCA-derived features.
+
+### Cell 12 - Train baseline Random Forest regressors
+
+```python
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+
+baseline_results = {}
+
+for target in target_columns:
+    model = RandomForestRegressor(
+        n_estimators=100,
+        random_state=42,
+        n_jobs=-1
+    )
+
+    model.fit(X_model_train, y_train[target])
+
+    predictions = model.predict(X_model_test)
+
+    r2 = r2_score(y_test[target], predictions)
+    mae = mean_absolute_error(y_test[target], predictions)
+    rmse = mean_squared_error(
+        y_test[target],
+        predictions
+    ) ** 0.5
+
+    baseline_results[target] = {
+        "model": model,
+        "r2": r2,
+        "mae": mae,
+        "rmse": rmse
+    }
+
+    print(target)
+    print(f"  R2:   {r2:.4f}")
+    print(f"  MAE:  {mae:.6f}")
+    print(f"  RMSE: {rmse:.6f}")
+```
+
+Next step: evaluate the three target metrics and decide whether the 4-feature representation is sufficiently predictive before comparing additional PCA feature combinations.
