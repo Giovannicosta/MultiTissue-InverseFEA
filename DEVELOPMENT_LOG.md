@@ -1317,4 +1317,61 @@ for bottom_n, inner_n, outer_n in configs:
     )
 ```
 
-Next step: use this asymmetric sweep to see whether Part1_E benefits from preserving more information in one geometry region than the others at noise = 0.05.
+Validated asymmetric PCA sweep at noise = 0.05:
+
+```text
+Bottom 2, Inner 1, Outer 1 -> R2: -0.0285
+Bottom 2, Inner 2, Outer 2 -> R2: 0.0442
+Bottom 3, Inner 2, Outer 2 -> R2: 0.0697
+Bottom 3, Inner 3, Outer 3 -> R2: 0.0838
+Bottom 5, Inner 3, Outer 3 -> R2: 0.0838
+Bottom 5, Inner 5, Outer 5 -> R2: 0.0838
+```
+
+Interpretation:
+- Increasing component count helps up to about 3 PCs per group.
+- Adding more than 3 PCs does not improve Part1_E at noise = 0.05.
+- This reinforces the earlier conclusion that the failure at high noise is not caused by insufficient PCA dimensionality.
+- The best asymmetric result here (R2 = 0.0838) is still below the matched-noise augmentation result (R2 = 0.1004).
+
+## Negative / failed experiments
+
+These results are intentionally retained because they narrow the design space and prevent repeating unproductive approaches.
+
+### Part1_E diagnostics that did not solve the problem
+
+- 4-feature compact PCA representation at noise = 0.05:
+  - R2 = -0.0422
+- 9-feature PCA representation at noise = 0.05:
+  - R2 = 0.0781
+- 9 PCA features + Pressure + Inner_Radius + Outer_Radius:
+  - R2 = 0.0793
+  - Conclusion: these context variables did not explain the missing Part1_E signal.
+- Full 54-dimensional noisy geometry:
+  - R2 = 0.0768
+  - Conclusion: PCA compression was not the primary cause of failure.
+- Mixed-noise augmentation using training noise levels 0.0 through 0.05:
+  - R2 = 0.0626
+  - Conclusion: combining several noise regimes slightly hurt performance.
+- Asymmetric PCA component sweep at noise = 0.05:
+  - Best result R2 = 0.0838
+  - Conclusion: keeping more than 3 clean PCs per group did not recover Part1_E.
+- One PC per geometry group:
+  - Negative R2 at noise 0.01 and 0.02.
+  - Conclusion: Part1_E requires more than the dominant shape mode.
+- High noise levels remain a major failure mode:
+  - Raw geometry at noise 0.05: R2 = 0.0768
+  - Clean-PCA projection at noise 0.05: R2 = 0.0781
+  - Conclusion: at this noise level the current representation cannot recover the subtle Part1_E signal.
+
+### What did help
+
+- Clean geometry:
+  - Part1_E R2 = 0.9896
+- Clean-trained PCA projection:
+  - Improved Part1_E over raw geometry at noise 0.005 to 0.03
+- Matched-noise augmentation at noise = 0.05:
+  - Improved Part1_E from R2 = 0.0781 to R2 = 0.1004
+  - Improvement is real but modest.
+
+Next step: preserve these negative results as part of the research record and move to a stronger denoising or shape-reconstruction method rather than spending more effort on PCA component-count tuning.
