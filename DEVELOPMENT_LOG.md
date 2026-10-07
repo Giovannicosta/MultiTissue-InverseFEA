@@ -2024,3 +2024,49 @@ Expected:
 DAE train: (66402, 54) (66402, 54)
 DAE val: (11718, 54) (11718, 54)
 ```
+
+
+### Denoiser train/validation split checkpoint
+
+Validated output:
+
+```text
+DAE train: (66402, 54) (66402, 54)
+DAE val: (11718, 54) (11718, 54)
+```
+
+### Cell 28 - Build and train the first denoising autoencoder
+
+```python
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+
+tf.random.set_seed(42)
+
+dae = keras.Sequential([
+    layers.Input(shape=(54,)),
+    layers.Dense(128, activation="relu"),
+    layers.Dense(64, activation="relu"),
+    layers.Dense(16, activation="relu"),
+    layers.Dense(64, activation="relu"),
+    layers.Dense(128, activation="relu"),
+    layers.Dense(54)
+])
+
+dae.compile(
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    loss="mse"
+)
+
+history = dae.fit(
+    X_dae_train,
+    y_dae_train,
+    validation_data=(X_dae_val, y_dae_val),
+    epochs=50,
+    batch_size=256,
+    verbose=1
+)
+```
+
+Next step: inspect training vs validation loss, then evaluate reconstruction quality on held-out test simulations at noise = 0.05.
