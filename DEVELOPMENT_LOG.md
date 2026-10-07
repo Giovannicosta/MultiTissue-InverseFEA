@@ -1582,3 +1582,34 @@ Ambiente de execução -> Executar tudo
 Before doing so, make sure the notebook contains the validated cells in order. The expensive spline-base step will rerun, but this restores all required state consistently.
 
 Recommended later improvement: save the clean spline bases and fitted PCA models to disk so a runtime reset does not require recomputing the expensive preprocessing.
+
+
+### Runtime recovery checkpoint
+
+After the Colab reset, the notebook has been rerun through the `add_fast_noise()` function definition.
+
+Next recovery step:
+
+```python
+X_train_noisy = add_fast_noise(
+    X_train_spline_base,
+    noise_level=0.05,
+    seed=42
+)
+
+X_test_noisy = add_fast_noise(
+    X_test_spline_base,
+    noise_level=0.05,
+    seed=43
+)
+
+print("Noisy train:", X_train_noisy.shape)
+print("Noisy test:", X_test_noisy.shape)
+```
+
+Expected output:
+
+```text
+Noisy train: (5208, 54)
+Noisy test: (1302, 54)
+```
