@@ -2250,3 +2250,20 @@ The main reference points are:
 - Supervised geometry-denoising autoencoder followed by Random Forest: R2 = 0.0258.
 
 For a new target-aware method, the primary practical comparison should be against the raw-noisy and matched-noise baselines. The clean-geometry result is a reference ceiling showing how much Part1_E information exists before measurement noise is introduced; it is not a directly fair noisy-input competitor.
+
+
+### How the denoising autoencoder removes noise
+
+The denoising autoencoder is trained using paired examples of the same simulation:
+
+```text
+noisy 54-coordinate geometry -> network -> clean 54-coordinate geometry
+```
+
+For each clean training geometry, artificial perturbations are generated at several noise levels and random seeds. The clean geometry remains the target. Because many different corrupted versions map back to the same underlying clean shape, the network is encouraged to learn repeatable structure shared by valid tissue geometries rather than reproduce each random perturbation.
+
+The current network compresses 54 coordinates through 128 and 64 hidden units into a 16-dimensional latent representation, then expands 16 -> 64 -> 128 -> 54. This bottleneck limits the information that can be copied directly and encourages a compact representation of recurring shape structure.
+
+The training loss is mean squared reconstruction error between predicted and clean standardized coordinates. Therefore, the model is not explicitly told which coordinate deviations are noise; it learns statistically that unpredictable perturbations should be removed when doing so makes its output closer to the corresponding clean examples.
+
+Current limitation: this objective preserves features useful for minimizing average coordinate error, not necessarily features carrying material-property information. This explains why geometry MAE improved strongly while Part1_E R2 worsened.
