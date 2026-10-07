@@ -1797,3 +1797,43 @@ Reference baseline at noise = 0.05:
 - Matched-noise augmentation: R2 = 0.1004
 
 This test determines whether reconstructing geometry back onto the clean PCA manifold provides any additional benefit before moving to a nonlinear denoiser.
+
+
+### PCA geometry reconstruction result
+
+Validated result:
+
+```text
+Part1_E PCA-reconstructed geometry
+  R2:   0.0728
+  MAE:  0.014611
+  RMSE: 0.017266
+```
+
+Comparison at noise = 0.05:
+- Raw noisy geometry: R2 = 0.0768
+- 9-feature clean-PCA projection: R2 = 0.0781
+- PCA-reconstructed 54-coordinate geometry: R2 = 0.0728
+- Matched-noise augmentation: R2 = 0.1004
+
+Interpretation:
+- PCA inverse reconstruction does not improve Part1_E and slightly underperforms both raw noisy geometry and direct PCA-score prediction.
+- This is an important negative result: once the noisy observation is reduced to the same low-dimensional linear PCA subspace, inverse-transforming it back to 54 coordinates cannot restore information that was discarded.
+- Further linear PCA reconstruction tuning is therefore low priority.
+
+### Next method: supervised nonlinear denoising autoencoder
+
+The next experiment should explicitly learn the paired mapping:
+
+```text
+noisy 54-coordinate geometry -> clean 54-coordinate geometry
+```
+
+Training pairs can be generated from each clean training simulation using multiple independent noise realizations. Evaluation must remain on held-out test simulations.
+
+The denoiser should first be evaluated on:
+1. reconstruction error against clean test geometry,
+2. downstream Part1_E R2 after denoising,
+3. comparison against raw noisy geometry and the clean-PCA baseline.
+
+Do not include Part1_E in the denoiser loss initially; first determine whether geometry itself can be reconstructed without target leakage.
