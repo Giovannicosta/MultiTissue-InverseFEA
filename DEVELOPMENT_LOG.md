@@ -2210,3 +2210,28 @@ Reference baselines at noise = 0.05:
 - Raw noisy geometry R2 = 0.0768
 - Clean-PCA projection R2 = 0.0781
 - Matched-noise augmentation R2 = 0.1004
+
+
+### Denoised geometry downstream Part1_E result
+
+Validated result:
+
+```text
+Part1_E using denoised geometry
+  R2:   0.0258
+  MAE:  0.014777
+  RMSE: 0.017697
+```
+
+This is a critical negative result. Although the supervised autoencoder reduced coordinate MAE from 0.028150 to 0.003754 (~86.7%), downstream Part1_E performance became worse.
+
+Comparison at noise = 0.05:
+- Raw noisy geometry: R2 = 0.0768
+- Direct clean-PCA features: R2 = 0.0781
+- PCA reconstructed geometry: R2 = 0.0728
+- Matched-noise augmentation: R2 = 0.1004
+- Denoising autoencoder geometry: R2 = 0.0258
+
+Interpretation: minimizing average coordinate reconstruction error is not sufficient for inverse FEA. The autoencoder can produce geometrically accurate shapes while smoothing/removing small deformation patterns that carry Part1_E information.
+
+Recommended next experiment: target-aware denoising. Preserve the geometry reconstruction objective, but add an auxiliary Part1_E prediction objective so the latent representation/reconstruction is encouraged to retain mechanically informative features. This should be done with training targets only and evaluated strictly on held-out test simulations.
