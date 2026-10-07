@@ -2138,3 +2138,75 @@ print(f"Denoised geometry MAE:   {denoised_mae:.6f}")
 ```
 
 Next step: if denoised MAE improves, test whether Part1_E prediction improves when using the denoised geometry.
+
+
+### Denoiser held-out reconstruction result
+
+Validated result at noise = 0.05:
+
+```text
+Raw noisy geometry MAE: 0.028150
+Denoised geometry MAE:   0.003754
+```
+
+Interpretation:
+- The denoising autoencoder reduces average coordinate error by about 86.7%.
+- This is a major improvement over the raw noisy geometry and confirms the nonlinear denoiser is learning useful structure from paired noisy/clean simulations.
+- The next critical test is downstream inverse-FEA performance, especially whether Part1_E recovers when predicted from denoised geometry.
+
+### Cell 30 - Evaluate Part1_E on denoised geometry
+
+```python
+X_train_noisy_scaled = geometry_scaler.transform(
+    X_train_noisy[feature_columns]
+)
+
+X_train_denoised_scaled = dae.predict(
+    X_train_noisy_scaled,
+    verbose=0
+)
+
+X_train_denoised = geometry_scaler.inverse_transform(
+    X_train_denoised_scaled
+)
+
+part1_denoised_model = RandomForestRegressor(
+    n_estimators=100,
+    random_state=42,
+    n_jobs=-1
+)
+
+part1_denoised_model.fit(
+    X_train_denoised,
+    y_train["Part1_E"]
+)
+
+part1_denoised_pred = part1_denoised_model.predict(
+    X_test_denoised
+)
+
+r2 = r2_score(
+    y_test["Part1_E"],
+    part1_denoised_pred
+)
+
+mae = mean_absolute_error(
+    y_test["Part1_E"],
+    part1_denoised_pred
+)
+
+rmse = mean_squared_error(
+    y_test["Part1_E"],
+    part1_denoised_pred
+) ** 0.5
+
+print("Part1_E using denoised geometry")
+print(f"  R2:   {r2:.4f}")
+print(f"  MAE:  {mae:.6f}")
+print(f"  RMSE: {rmse:.6f}")
+```
+
+Reference baselines at noise = 0.05:
+- Raw noisy geometry R2 = 0.0768
+- Clean-PCA projection R2 = 0.0781
+- Matched-noise augmentation R2 = 0.1004
