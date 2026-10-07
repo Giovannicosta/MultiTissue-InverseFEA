@@ -1569,3 +1569,16 @@ def add_fast_noise(X_base, noise_level=0.05, seed=42):
 ```
 
 Then recreate `X_train_noisy` and `X_test_noisy`.
+
+
+### Colab runtime reset recovery
+
+If the Colab runtime resets and previously defined variables/functions disappear, the safest recovery is to rerun the notebook from the top using:
+
+```text
+Ambiente de execução -> Executar tudo
+```
+
+Before doing so, make sure the notebook contains the validated cells in order. The expensive spline-base step will rerun, but this restores all required state consistently.
+
+Recommended later improvement: save the clean spline bases and fitted PCA models to disk so a runtime reset does not require recomputing the expensive preprocessing.
