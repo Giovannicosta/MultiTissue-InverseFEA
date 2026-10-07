@@ -1938,3 +1938,50 @@ Denoiser targets: (78120, 54)
 ```
 
 This produces 15 noisy realizations per clean training sample: 5 noise levels x 3 random seeds.
+
+
+### Paired denoiser dataset checkpoint
+
+Validated output:
+
+```text
+Denoiser inputs: (78120, 54)
+Denoiser targets: (78120, 54)
+```
+
+This corresponds to 15 noisy realizations for each of the 5,208 clean training simulations.
+
+### Cell 26 - Standardize denoiser inputs and targets
+
+Use statistics from the clean training geometry only.
+
+```python
+from sklearn.preprocessing import StandardScaler
+
+geometry_scaler = StandardScaler()
+
+geometry_scaler.fit(
+    X_train_spline_base[feature_columns]
+)
+
+X_denoise_train_scaled = geometry_scaler.transform(
+    X_denoise_train
+)
+
+y_denoise_train_scaled = geometry_scaler.transform(
+    y_denoise_train
+)
+
+print("Scaled denoiser inputs:", X_denoise_train_scaled.shape)
+print("Scaled denoiser targets:", y_denoise_train_scaled.shape)
+print(
+    "Input mean (approx):",
+    X_denoise_train_scaled.mean()
+)
+print(
+    "Target mean (approx):",
+    y_denoise_train_scaled.mean()
+)
+```
+
+Next step: split the paired denoiser training data into training and validation subsets without touching the held-out inverse-FEA test simulations.
