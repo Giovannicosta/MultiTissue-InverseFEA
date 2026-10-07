@@ -1741,3 +1741,59 @@ Expected output:
 Reconstructed train: (5208, 54)
 Reconstructed test: (1302, 54)
 ```
+
+
+### Reconstruction baseline checkpoint
+
+Validated output:
+
+```text
+Reconstructed train: (5208, 54)
+Reconstructed test: (1302, 54)
+```
+
+Next step: evaluate whether PCA reconstruction improves downstream Part1_E prediction compared with raw noisy geometry.
+
+```python
+recon_model = RandomForestRegressor(
+    n_estimators=100,
+    random_state=42,
+    n_jobs=-1
+)
+
+recon_model.fit(
+    X_train_reconstructed,
+    y_train["Part1_E"]
+)
+
+recon_pred = recon_model.predict(
+    X_test_reconstructed
+)
+
+r2 = r2_score(
+    y_test["Part1_E"],
+    recon_pred
+)
+
+mae = mean_absolute_error(
+    y_test["Part1_E"],
+    recon_pred
+)
+
+rmse = mean_squared_error(
+    y_test["Part1_E"],
+    recon_pred
+) ** 0.5
+
+print("Part1_E PCA-reconstructed geometry")
+print(f"  R2:   {r2:.4f}")
+print(f"  MAE:  {mae:.6f}")
+print(f"  RMSE: {rmse:.6f}")
+```
+
+Reference baseline at noise = 0.05:
+- Raw noisy geometry: R2 = 0.0768
+- 9-feature clean-PCA projection: R2 = 0.0781
+- Matched-noise augmentation: R2 = 0.1004
+
+This test determines whether reconstructing geometry back onto the clean PCA manifold provides any additional benefit before moving to a nonlinear denoiser.
