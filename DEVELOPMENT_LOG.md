@@ -2235,3 +2235,18 @@ Comparison at noise = 0.05:
 Interpretation: minimizing average coordinate reconstruction error is not sufficient for inverse FEA. The autoencoder can produce geometrically accurate shapes while smoothing/removing small deformation patterns that carry Part1_E information.
 
 Recommended next experiment: target-aware denoising. Preserve the geometry reconstruction objective, but add an auxiliary Part1_E prediction objective so the latent representation/reconstruction is encouraged to retain mechanically informative features. This should be done with training targets only and evaluated strictly on held-out test simulations.
+
+
+### Clarification - Part1_E comparison framework
+
+Part1_E experiments are compared against the same held-out test simulations and the same regression metric (R2), with noise level 0.05 unless otherwise stated.
+
+The main reference points are:
+- **Clean-geometry upper/reference baseline:** Random Forest trained/tested on clean spline geometry, R2 = 0.9896.
+- **Raw-noisy baseline:** Random Forest using the 54 noisy geometry coordinates, R2 = 0.0768.
+- **Best noise-handling baseline so far:** matched-noise augmentation, R2 = 0.1004.
+- Clean-PCA projection: R2 = 0.0781.
+- PCA-reconstructed geometry: R2 = 0.0728.
+- Supervised geometry-denoising autoencoder followed by Random Forest: R2 = 0.0258.
+
+For a new target-aware method, the primary practical comparison should be against the raw-noisy and matched-noise baselines. The clean-geometry result is a reference ceiling showing how much Part1_E information exists before measurement noise is introduced; it is not a directly fair noisy-input competitor.
