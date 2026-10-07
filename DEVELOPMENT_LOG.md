@@ -2087,3 +2087,54 @@ Interpretation:
 - Validation loss is falling with training loss, so there is no obvious severe overfitting in the reported range.
 - The model continues to improve through at least epoch 29.
 - The next checkpoint should record the final epoch values and then test the trained denoiser on held-out noisy test geometry.
+
+
+### Denoising autoencoder training complete
+
+Final training values:
+
+```text
+Epoch 50/50
+loss: 0.0115
+val_loss: 0.0120
+```
+
+Training remained stable through the final epochs. Validation loss tracked training loss closely, with only small fluctuations, so there is no obvious severe overfitting.
+
+### Cell 29 - Evaluate denoiser on held-out test geometry at noise = 0.05
+
+```python
+X_test_noisy_scaled = geometry_scaler.transform(
+    X_test_noisy[feature_columns]
+)
+
+X_test_denoised_scaled = dae.predict(
+    X_test_noisy_scaled,
+    verbose=0
+)
+
+X_test_denoised = geometry_scaler.inverse_transform(
+    X_test_denoised_scaled
+)
+
+X_test_clean = X_test_spline_base[feature_columns].to_numpy()
+
+raw_mae = np.mean(
+    np.abs(
+        X_test_noisy[feature_columns].to_numpy()
+        - X_test_clean
+    )
+)
+
+denoised_mae = np.mean(
+    np.abs(
+        X_test_denoised
+        - X_test_clean
+    )
+)
+
+print(f"Raw noisy geometry MAE: {raw_mae:.6f}")
+print(f"Denoised geometry MAE:   {denoised_mae:.6f}")
+```
+
+Next step: if denoised MAE improves, test whether Part1_E prediction improves when using the denoised geometry.
