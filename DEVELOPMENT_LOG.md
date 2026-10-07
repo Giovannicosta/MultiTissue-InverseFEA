@@ -1504,3 +1504,33 @@ inverse material-property expert
 ```
 
 The immediate PCA reconstruction baseline is also not a learned neural denoiser. It uses PCA fitted on clean training geometry and `inverse_transform()` to project noisy observations back onto the learned clean-shape subspace. A later supervised denoising autoencoder would be a genuinely trained noisy-to-clean reconstruction model.
+
+
+### Fix: recreate X_train_noisy / X_test_noisy before PCA reconstruction
+
+If Colab reports:
+
+```text
+NameError: name 'X_train_noisy' is not defined
+```
+
+rerun the noisy-dataset creation step before the PCA reconstruction cells:
+
+```python
+X_train_noisy = add_fast_noise(
+    X_train_spline_base,
+    noise_level=0.05,
+    seed=42
+)
+
+X_test_noisy = add_fast_noise(
+    X_test_spline_base,
+    noise_level=0.05,
+    seed=43
+)
+
+print("Noisy train:", X_train_noisy.shape)
+print("Noisy test:", X_test_noisy.shape)
+```
+
+This error usually means the Colab runtime was restarted or the relevant earlier cell was not executed in the current session.
