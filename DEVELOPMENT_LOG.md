@@ -1473,3 +1473,34 @@ print("Reconstructed test:", X_test_reconstructed.shape)
 ```
 
 After this baseline is measured, the next major implementation should be a supervised denoising autoencoder trained on paired noisy -> clean geometry.
+
+
+### Clarification: how this differs from Grace's InverseFEA repository
+
+The proposed denoising/reconstruction stage is **not the same approach** used in `gracegb/InverseFEA`.
+
+Grace's repository primarily:
+- consumes already-created clean/noisy PCA datasets,
+- trains Random Forest / XGBoost inverse regressors,
+- experiments with chained and iterative predictions,
+- compares clean-trained and noisy-tested models,
+- includes OOF/CORAL/quantile experiments for Part1_E.
+
+It does **not** train a model whose task is:
+```text
+noisy geometry -> reconstructed clean geometry
+```
+
+The current MultiTissue-InverseFEA direction adds that missing intermediate stage:
+
+```text
+noisy observation
+      ↓
+denoiser / clean-manifold reconstruction
+      ↓
+cleaner geometry representation
+      ↓
+inverse material-property expert
+```
+
+The immediate PCA reconstruction baseline is also not a learned neural denoiser. It uses PCA fitted on clean training geometry and `inverse_transform()` to project noisy observations back onto the learned clean-shape subspace. A later supervised denoising autoencoder would be a genuinely trained noisy-to-clean reconstruction model.
