@@ -1375,3 +1375,101 @@ These results are intentionally retained because they narrow the design space an
   - Improvement is real but modest.
 
 Next step: preserve these negative results as part of the research record and move to a stronger denoising or shape-reconstruction method rather than spending more effort on PCA component-count tuning.
+
+
+## Next phase: denoising and shape reconstruction
+
+The PCA component-count experiments are now sufficiently explored. The next development focus is reconstructing a cleaner estimate of geometry before inverse prediction.
+
+Recommended progression:
+
+1. **Clean-manifold PCA reconstruction baseline**
+   - Fit PCA on clean training geometry.
+   - Project noisy geometry into that fixed PCA space.
+   - Reconstruct geometry with `inverse_transform()`.
+   - Train the inverse model on reconstructed geometry.
+   - This is a cheap baseline for manifold-based denoising.
+
+2. **Supervised denoising autoencoder**
+   - Input: noisy 54-coordinate geometry.
+   - Target: corresponding clean spline-base geometry.
+   - Train only on training simulations and generate multiple noise realizations per clean sample.
+   - Evaluate both coordinate reconstruction error and downstream `Part1_E` prediction.
+   - This is the preferred next nonlinear method because paired clean/noisy data are available.
+
+3. **Target-aware denoising (later)**
+   - Only after a plain denoiser is validated.
+   - Combine geometry reconstruction loss with a material-property prediction loss so that subtle geometry useful for `Part1_E` is preserved.
+
+### Cell 24 - PCA reconstruction baseline
+
+Use the already-fitted clean PCA models to reconstruct noisy geometry back onto the clean shape manifold.
+
+```python
+def reconstruct_from_clean_pca(
+    X_noisy,
+    pca_model,
+    cols
+):
+    scores = pca_model.transform(X_noisy[cols])
+    reconstructed = pca_model.inverse_transform(scores)
+
+    return pd.DataFrame(
+        reconstructed,
+        columns=cols,
+        index=X_noisy.index
+    )
+
+bottom_train_recon = reconstruct_from_clean_pca(
+    X_train_noisy,
+    bottom_pca_clean,
+    bottom_cols
+)
+
+bottom_test_recon = reconstruct_from_clean_pca(
+    X_test_noisy,
+    bottom_pca_clean,
+    bottom_cols
+)
+
+inner_train_recon = reconstruct_from_clean_pca(
+    X_train_noisy,
+    inner_pca_clean,
+    inner_shape_cols
+)
+
+inner_test_recon = reconstruct_from_clean_pca(
+    X_test_noisy,
+    inner_pca_clean,
+    inner_shape_cols
+)
+
+outer_train_recon = reconstruct_from_clean_pca(
+    X_train_noisy,
+    outer_pca_clean,
+    outer_shape_cols
+)
+
+outer_test_recon = reconstruct_from_clean_pca(
+    X_test_noisy,
+    outer_pca_clean,
+    outer_shape_cols
+)
+
+X_train_reconstructed = pd.concat([
+    bottom_train_recon,
+    inner_train_recon,
+    outer_train_recon
+], axis=1)[feature_columns]
+
+X_test_reconstructed = pd.concat([
+    bottom_test_recon,
+    inner_test_recon,
+    outer_test_recon
+], axis=1)[feature_columns]
+
+print("Reconstructed train:", X_train_reconstructed.shape)
+print("Reconstructed test:", X_test_reconstructed.shape)
+```
+
+After this baseline is measured, the next major implementation should be a supervised denoising autoencoder trained on paired noisy -> clean geometry.
