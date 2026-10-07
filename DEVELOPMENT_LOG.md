@@ -1837,3 +1837,22 @@ The denoiser should first be evaluated on:
 3. comparison against raw noisy geometry and the clean-PCA baseline.
 
 Do not include Part1_E in the denoiser loss initially; first determine whether geometry itself can be reconstructed without target leakage.
+
+
+### Experiment naming
+
+Recommended experiment name:
+
+**Supervised Geometry Denoising for Noise-Robust Inverse FEA**
+
+Short internal name:
+
+`DAE-Geometry-v1`
+
+Suggested description:
+
+> This experiment evaluates whether a supervised denoising autoencoder can recover clean tissue geometry from noisy coordinate observations and thereby improve inverse FEA prediction of noise-sensitive material properties. Artificially corrupted geometry is used as input while the corresponding clean simulated geometry serves as the reconstruction target. The denoiser is trained independently of the elastic-modulus targets, and its reconstructed geometry is subsequently evaluated using the inverse regression model, with particular emphasis on Part1_E.
+
+Core hypothesis:
+
+> Learning the nonlinear mapping from noisy observations to valid clean tissue shapes will preserve subtle geometry relevant to Part1_E better than linear PCA-based denoising.
