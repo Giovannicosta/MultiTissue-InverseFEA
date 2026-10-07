@@ -1985,3 +1985,42 @@ print(
 ```
 
 Next step: split the paired denoiser training data into training and validation subsets without touching the held-out inverse-FEA test simulations.
+
+
+### Denoiser scaling checkpoint
+
+Validated output:
+
+```text
+Scaled denoiser inputs: (78120, 54)
+Scaled denoiser targets: (78120, 54)
+Input mean: 0.025558734209917895
+Target mean: approximately 0
+```
+
+Interpretation:
+- The clean targets are centered essentially at zero, as expected.
+- The noisy inputs are not exactly zero-centered because noise shifts the distribution slightly.
+- The scikit-learn warnings about feature names are harmless and occur because the scaler was fitted on a DataFrame but transformed NumPy arrays.
+
+### Cell 27 - Split denoiser data into train and validation sets
+
+```python
+from sklearn.model_selection import train_test_split
+
+X_dae_train, X_dae_val, y_dae_train, y_dae_val = train_test_split(
+    X_denoise_train_scaled,
+    y_denoise_train_scaled,
+    test_size=0.15,
+    random_state=42
+)
+
+print("DAE train:", X_dae_train.shape, y_dae_train.shape)
+print("DAE val:", X_dae_val.shape, y_dae_val.shape)
+```
+
+Expected:
+```text
+DAE train: (66402, 54) (66402, 54)
+DAE val: (11718, 54) (11718, 54)
+```
