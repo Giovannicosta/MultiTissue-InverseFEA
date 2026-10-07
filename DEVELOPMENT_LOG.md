@@ -2070,3 +2070,20 @@ history = dae.fit(
 ```
 
 Next step: inspect training vs validation loss, then evaluate reconstruction quality on held-out test simulations at noise = 0.05.
+
+
+### Denoising autoencoder training checkpoint (partial)
+
+Training through epoch 29 shows steady improvement:
+
+```text
+Epoch 1:  loss 0.2850, val_loss 0.0768
+Epoch 10: loss 0.0231, val_loss 0.0216
+Epoch 20: loss 0.0180, val_loss 0.0206
+Epoch 29: loss 0.0154, val_loss 0.0149
+```
+
+Interpretation:
+- Validation loss is falling with training loss, so there is no obvious severe overfitting in the reported range.
+- The model continues to improve through at least epoch 29.
+- The next checkpoint should record the final epoch values and then test the trained denoiser on held-out noisy test geometry.
