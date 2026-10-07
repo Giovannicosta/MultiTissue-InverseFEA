@@ -1660,3 +1660,84 @@ outer_pca_clean = fit_clean_pca(
 
 print("PCA models fitted.")
 ```
+
+
+### Runtime recovery checkpoint - PCA models restored
+
+Validated output:
+
+```text
+PCA models fitted.
+```
+
+Next step: reconstruct noisy geometry back onto the clean PCA manifolds.
+
+```python
+def reconstruct_from_clean_pca(X_noisy, pca_model, cols):
+    scores = pca_model.transform(X_noisy[cols])
+    reconstructed = pca_model.inverse_transform(scores)
+
+    return pd.DataFrame(
+        reconstructed,
+        columns=cols,
+        index=X_noisy.index
+    )
+
+bottom_train_recon = reconstruct_from_clean_pca(
+    X_train_noisy,
+    bottom_pca_clean,
+    bottom_cols
+)
+
+bottom_test_recon = reconstruct_from_clean_pca(
+    X_test_noisy,
+    bottom_pca_clean,
+    bottom_cols
+)
+
+inner_train_recon = reconstruct_from_clean_pca(
+    X_train_noisy,
+    inner_pca_clean,
+    inner_shape_cols
+)
+
+inner_test_recon = reconstruct_from_clean_pca(
+    X_test_noisy,
+    inner_pca_clean,
+    inner_shape_cols
+)
+
+outer_train_recon = reconstruct_from_clean_pca(
+    X_train_noisy,
+    outer_pca_clean,
+    outer_shape_cols
+)
+
+outer_test_recon = reconstruct_from_clean_pca(
+    X_test_noisy,
+    outer_pca_clean,
+    outer_shape_cols
+)
+
+X_train_reconstructed = pd.concat([
+    bottom_train_recon,
+    inner_train_recon,
+    outer_train_recon
+], axis=1)[feature_columns]
+
+X_test_reconstructed = pd.concat([
+    bottom_test_recon,
+    inner_test_recon,
+    outer_test_recon
+], axis=1)[feature_columns]
+
+print("Reconstructed train:", X_train_reconstructed.shape)
+print("Reconstructed test:", X_test_reconstructed.shape)
+```
+
+Expected output:
+
+```text
+Reconstructed train: (5208, 54)
+Reconstructed test: (1302, 54)
+```
