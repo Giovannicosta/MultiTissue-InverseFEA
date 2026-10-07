@@ -1856,3 +1856,41 @@ Suggested description:
 Core hypothesis:
 
 > Learning the nonlinear mapping from noisy observations to valid clean tissue shapes will preserve subtle geometry relevant to Part1_E better than linear PCA-based denoising.
+
+
+## Recommended next steps after PCA denoising
+
+The next phase should focus on a supervised nonlinear geometry denoiser.
+
+Recommended order:
+
+1. **Build paired training data**
+   - Input: noisy 54-coordinate geometry.
+   - Target: corresponding clean spline-base geometry.
+   - Generate multiple independent noisy versions of each clean training simulation.
+   - Keep test simulations completely held out.
+
+2. **Train a small denoising autoencoder**
+   - Start with a simple fully connected network rather than a complex architecture.
+   - Suggested structure:
+     - 54 -> 128 -> 64 -> 16 latent dimensions
+     - 16 -> 64 -> 128 -> 54
+   - Optimize reconstruction loss only at first.
+
+3. **Evaluate geometry reconstruction**
+   - Compare noisy-vs-clean MAE with denoised-vs-clean MAE.
+   - Inspect a few reconstructed Inner/Outer shapes visually.
+
+4. **Evaluate downstream inverse FEA**
+   - Train the same Random Forest Part1_E model on denoised geometry.
+   - Compare against:
+     - raw noisy geometry,
+     - clean-PCA features,
+     - matched-noise augmentation.
+
+5. **Only if geometry denoising helps**
+   - Tune latent size and loss.
+   - Try region-weighted reconstruction losses.
+   - Later test a target-aware loss that preserves geometry important to Part1_E.
+
+Do not move to the multi-expert orchestrator yet. First establish whether a denoiser can recover the subtle Part1_E geometry signal under realistic noise.
