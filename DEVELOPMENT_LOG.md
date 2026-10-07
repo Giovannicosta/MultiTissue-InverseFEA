@@ -1534,3 +1534,38 @@ print("Noisy test:", X_test_noisy.shape)
 ```
 
 This error usually means the Colab runtime was restarted or the relevant earlier cell was not executed in the current session.
+
+
+### Fix: recreate add_fast_noise after Colab runtime reset
+
+If Colab reports:
+
+```text
+NameError: name 'add_fast_noise' is not defined
+```
+
+the function-definition cell has not been run in the current runtime. Rerun:
+
+```python
+def add_fast_noise(X_base, noise_level=0.05, seed=42):
+    rng = np.random.default_rng(seed)
+    noisy = X_base.copy()
+
+    noisy[bottom_cols] += rng.uniform(
+        -0.01,
+        0.01,
+        size=noisy[bottom_cols].shape
+    )
+
+    shape_cols = inner_shape_cols + outer_shape_cols
+
+    noisy[shape_cols] += rng.normal(
+        0,
+        noise_level,
+        size=noisy[shape_cols].shape
+    )
+
+    return noisy
+```
+
+Then recreate `X_train_noisy` and `X_test_noisy`.
