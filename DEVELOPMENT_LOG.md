@@ -2267,3 +2267,48 @@ The current network compresses 54 coordinates through 128 and 64 hidden units in
 The training loss is mean squared reconstruction error between predicted and clean standardized coordinates. Therefore, the model is not explicitly told which coordinate deviations are noise; it learns statistically that unpredictable perturbations should be removed when doing so makes its output closer to the corresponding clean examples.
 
 Current limitation: this objective preserves features useful for minimizing average coordinate error, not necessarily features carrying material-property information. This explains why geometry MAE improved strongly while Part1_E R2 worsened.
+
+
+### Cell 31 - Visualize clean vs noisy vs autoencoder-denoised geometry
+
+This visualization overlays the same held-out test sample before noise, after noise, and after denoising.
+
+```python
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Convert denoised test output back to a DataFrame
+X_test_denoised_df = pd.DataFrame(
+    X_test_denoised,
+    columns=feature_columns,
+    index=X_test.index
+)
+
+sample = X_test.index[0]
+
+# Inner shape
+clean_x = X_test_spline_base.loc[sample, inner_shape_cols[:9]].to_numpy()
+clean_y = X_test_spline_base.loc[sample, inner_shape_cols[9:]].to_numpy()
+
+noisy_x = X_test_noisy.loc[sample, inner_shape_cols[:9]].to_numpy()
+noisy_y = X_test_noisy.loc[sample, inner_shape_cols[9:]].to_numpy()
+
+denoised_x = X_test_denoised_df.loc[sample, inner_shape_cols[:9]].to_numpy()
+denoised_y = X_test_denoised_df.loc[sample, inner_shape_cols[9:]].to_numpy()
+
+plt.figure(figsize=(7, 7))
+
+plt.plot(clean_x, clean_y, "o-", label="Clean")
+plt.plot(noisy_x, noisy_y, "o--", label="Noisy")
+plt.plot(denoised_x, denoised_y, "o-", label="Denoised")
+
+plt.axis("equal")
+plt.xlabel("X")
+plt.ylabel("Y")
+plt.title(f"Inner Shape - Clean vs Noisy vs Denoised (sample {sample})")
+plt.legend()
+plt.grid(True)
+plt.show()
+```
+
+The same pattern can later be repeated for Outer Shape and Bottom geometry.
