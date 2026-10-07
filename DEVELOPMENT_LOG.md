@@ -1613,3 +1613,50 @@ Expected output:
 Noisy train: (5208, 54)
 Noisy test: (1302, 54)
 ```
+
+
+### Runtime recovery checkpoint - noisy datasets restored
+
+Validated output:
+
+```text
+Noisy train: (5208, 54)
+Noisy test: (1302, 54)
+```
+
+Next recovery step: refit the clean-training PCA models for Bottom, Inner Shape, and Outer Shape.
+
+```python
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+def fit_clean_pca(X_clean, cols, n_components=3):
+    pipeline = Pipeline([
+        ("center", StandardScaler(with_std=False)),
+        ("pca", PCA(n_components=n_components))
+    ])
+
+    pipeline.fit(X_clean[cols])
+    return pipeline
+
+bottom_pca_clean = fit_clean_pca(
+    X_train_spline_base,
+    bottom_cols,
+    n_components=3
+)
+
+inner_pca_clean = fit_clean_pca(
+    X_train_spline_base,
+    inner_shape_cols,
+    n_components=3
+)
+
+outer_pca_clean = fit_clean_pca(
+    X_train_spline_base,
+    outer_shape_cols,
+    n_components=3
+)
+
+print("PCA models fitted.")
+```
