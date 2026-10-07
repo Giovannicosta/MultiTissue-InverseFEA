@@ -1894,3 +1894,47 @@ Recommended order:
    - Later test a target-aware loss that preserves geometry important to Part1_E.
 
 Do not move to the multi-expert orchestrator yet. First establish whether a denoiser can recover the subtle Part1_E geometry signal under realistic noise.
+
+
+### Cell 25 - Build paired noisy/clean geometry data for denoising
+
+Create several noisy versions of each clean training simulation and pair each noisy sample with the corresponding clean spline-base geometry.
+
+```python
+train_noise_levels = [0.005, 0.01, 0.02, 0.03, 0.05]
+train_seeds = [42, 52, 62]
+
+noisy_pairs = []
+clean_pairs = []
+
+for noise in train_noise_levels:
+    for seed in train_seeds:
+        X_noisy_level = add_fast_noise(
+            X_train_spline_base,
+            noise_level=noise,
+            seed=seed
+        )
+
+        noisy_pairs.append(
+            X_noisy_level[feature_columns].to_numpy()
+        )
+
+        clean_pairs.append(
+            X_train_spline_base[feature_columns].to_numpy()
+        )
+
+X_denoise_train = np.vstack(noisy_pairs)
+y_denoise_train = np.vstack(clean_pairs)
+
+print("Denoiser inputs:", X_denoise_train.shape)
+print("Denoiser targets:", y_denoise_train.shape)
+```
+
+Expected shape:
+
+```text
+Denoiser inputs: (78120, 54)
+Denoiser targets: (78120, 54)
+```
+
+This produces 15 noisy realizations per clean training sample: 5 noise levels x 3 random seeds.
