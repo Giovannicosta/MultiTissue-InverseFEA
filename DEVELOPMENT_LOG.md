@@ -2512,3 +2512,17 @@ User chose radial spline noise as the primary synthetic noise model for upcoming
 ### PCA reconstruction under radial noise: first Colab experiment prepared
 
 Single-cell test prescribed: generate radial-noisy spline geometry for train/test (noise_level 0.05, seeds 42/43), fit 9-component PCA on clean training geometry exclusively, project/inverse-transform both noisy splits, measure held-out geometry MAE before/after PCA, train independent 100-tree RandomForestRegressor for Part1_E, Part3_E, Part11_E on reconstructed noisy training inputs, and report R2/prediction MAE on reconstructed noisy held-out test inputs against earlier radial baseline R2 (0.32583 / 0.99527 / 0.94435). No result available yet; next action is to inspect Colab output. Caveat: nine PCA dimensions are a test setting, not optimized, and geometric reconstruction loss alone does not establish downstream prediction improvement.
+
+
+### Radial-noise PCA reconstruction results (9 components)
+
+User Colab output, radial noise_level=0.05, train/test seeds 42/43, PCA fit to clean training geometry (54 features), 100-tree RF independently for each target:
+
+- Geometry MAE before PCA: **0.027416**; after 9-PC inverse reconstruction: **0.014076** (approx. 48.7% reduction).
+- Part1_E: raw radial R2 **0.32583**, reconstructed R2 **0.08541**, reconstructed prediction MAE **0.01459** (raw MAE was ~0.01252). Substantial regression despite coordinate MAE reduction.
+- Part3_E: raw radial R2 **0.99527**, reconstructed R2 **0.99575**, reconstructed prediction MAE **0.00419** (raw ~0.00428). Very small gain.
+- Part11_E: raw radial R2 **0.94435**, reconstructed R2 **0.93757**, reconstructed prediction MAE **0.00843** (raw ~0.00783). Regression.
+
+Interpretation: geometric coordinate accuracy is not a sufficient surrogate for downstream inverse FEA prediction accuracy. A possible hypothesis is that aggressive PCA compression removes subtle Part1_E-informative geometry, even while reducing average reconstruction error. No causal mechanism established.
+
+Next single-cell experiment provided: sweep PCA component count [3,6,9,12,18,27,36,45,54] for Part1_E; fit PCA on clean training geometry for each setting, reconstruct noisy radial train and test sets, train 100-tree RF, report held-out prediction R2/MAE and reconstructed geometry MAE. 54-PC reconstruction is a control expected to reproduce raw radial geometry/predictions to numerical precision. Avoid tuning final choices on test-set results without later separate validation.
