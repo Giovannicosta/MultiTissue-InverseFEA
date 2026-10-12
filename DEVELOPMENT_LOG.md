@@ -2445,3 +2445,17 @@ Added reproducible Colab plotting instructions to train a 100-tree RandomForestR
 ### Pending method change: smooth angular/radial spline noise
 
 The user previously proposed replacing independent Gaussian x/y coordinate perturbations of the inner/outer spline boundaries with center-origin radial rays parameterized by angle. Proposed algorithm: estimate a center for each shape, represent its boundary as radius versus angle (or intersect angular rays with a spline for suitable star-shaped contours), perturb radius with a smooth angularly correlated noise field, reconstruct/resample the boundary, and compare on matched held-out simulations against current Gaussian-coordinate noise. Important caveats: validate ray intersections and handling of non-star-shaped contours; distinguish segmentation noise from actual physical geometry changes; preserve consistent target labels for measurement-noise experiments. This was discussed but has NOT yet been implemented or validated. Existing benchmark graphs use current Gaussian-coordinate perturbations plus separate bottom jitter.
+
+
+### Implemented: pluggable Gaussian vs radial/angular spline noise
+
+Created `noise_models.py` and `noise_comparison.py` with a smoke test in `test_noise_models.py`.
+- `add_geometry_noise(X_base, method="gaussian"|"radial", noise_level, seed, bottom_jitter, harmonics)` accepts existing **spline-resampled clean geometry** and preserves the 54 feature columns and row order.
+- Gaussian mode reproduces the earlier `add_fast_noise` behavior: bottom coordinate uniform jitter +/-0.01 followed by iid Gaussian noise on 36 shape coordinates.
+- Radial mode uses sample contour centroid, polar angle of each existing nine spline points, and a 3-harmonic smooth periodic radial displacement to define noise. This is a *ray displacement of existing spline samples*, not an algorithm for solving exact angle-ray/spline intersections. It is best suited to approximately star-shaped contours.
+- Per-sample radial field normalization targets shape-coordinate RMS `noise_level`, the expectation of Gaussian coordinate noise, and limits inward radial movement to 90% of original radius. Report measured shape-coordinate RMS and MAE because clipping can reduce the actual perturbation.
+- Both retain identical bottom jitter on identical RNG seeds; if `noise_level=0`, specify `bottom_jitter=0` for truly clean geometry.
+- `compare_noise_methods` trains two 100-tree Random Forests separately under otherwise matched settings with the same original train/test split, target, feature columns, and train/test seeds. It reports held-out Part1_E R2/MAE plus shape coordinate MAE/RMS. `plot_noise_example` overlays clean, Gaussian, and radial contours.
+- A smoke test validated deterministic behavior, equality to original Gaussian generator, preserved shapes/index, zero-noise behavior, radial displacement direction, and the comparison runner on synthetic contour samples.
+- No real-dataset metrics for radial noise have yet been collected. The hypothesis is that smooth boundary errors better approximate some segmentation errors. A fixed true label remains appropriate when noise represents *measurement corruption* only; physical deformation would require regenerated ground truth.
+- Subsequent studies should sweep levels, multiple independent seeds, noise amplitude matched by realized RMS, and geometry validity checks; training a model on one noise distribution and testing on the other is a separate robustness test.
