@@ -2405,3 +2405,23 @@ Note: this inventory does not capture pandas Series/DataFrames or predictions on
 ### Prediction arrays recovered after full Colab rerun
 
 All eight arrays have 1,302 entries: `predictions`, `raw_pred`, `pca_pred`, `part1_test_pred`, `matched_pred`, `pred`, `recon_pred`, `part1_denoised_pred`. These appear to correspond to held-out test samples, but generic variable names may have been overwritten. Next verify each array against `y_test['Part1_E']` using R2 and MAE and compare with documented experimental results before labeling graphs. Preserve any ambiguity rather than assuming all arrays are distinct experiments.
+
+
+### Prediction inventory validation after notebook rerun
+
+Metrics computed against `y_test["Part1_E"]` (1,302 held-out samples):
+
+| Variable | Likely experiment | R2 | MAE |
+| --- | --- | ---: | ---: |
+| `predictions` | Unidentified, must inspect cell origin | -11.4317 | 0.051468 |
+| `raw_pred` | Raw noisy geometry | 0.0768 | 0.014744 |
+| `pca_pred` | Clean-PCA projection | 0.0781 | 0.014600 |
+| `part1_test_pred` | Mixed-noise augmentation | 0.0626 | 0.014469 |
+| `matched_pred` | Matched-noise augmentation | 0.1004 | 0.014361 |
+| `pred` | Asymmetric PCA experiment, likely final 0.0838 run | 0.0838 | 0.014555 |
+| `recon_pred` | PCA-reconstructed geometry | 0.0728 | 0.014611 |
+| `part1_denoised_pred` | Autoencoder denoising, current rerun | 0.0041 | 0.014997 |
+
+Earlier autoencoder run: R2 0.0258, MAE 0.014777, RMSE 0.017697. Current run differs; keep both runs documented and investigate training randomness/overwritten arrays. The unlabeled `predictions` array should not be used for graphs without provenance. Confirm same row alignment before comparison.
+
+Next plot the six clearly identifiable Part1_E methods in a 2x3 true-vs-predicted grid using the shared y_test array, with ideal y=x diagonal and identical axis ranges.
