@@ -2478,3 +2478,17 @@ The radial result improves R2 by 0.249025 absolute (4.24x versus Gaussian) and l
 ### Extend Gaussian-versus-radial comparison to all three variable targets
 
 Requested to compare Part1_E, Part3_E, and Part11_E (not Part2_E/Part3_E; the actual three variable dataset target names are Part1_E, Part3_E, Part11_E). Reuse `compare_noise_methods(X_train_spline_base, X_test_spline_base, y_train, y_test, target=target, noise_level=0.05)` for each target and concatenate results. This trains a separate matched Random Forest for each method and target, holding the train/test split and noise seeds fixed. Report R2 and prediction MAE for each target; compare MAE within targets rather than directly across differently scaled targets. No Part3_E/Part11_E radial results are known yet; await Colab output.
+
+
+### First all-target Gaussian versus radial results (single seed, noise level 0.05)
+
+| Target | Method | R2 | prediction MAE | shape-coordinate RMS |
+| --- | --- | ---: | ---: | ---: |
+| Part1_E | Gaussian | 0.07681 | 0.01474 | 0.04967 |
+| Part1_E | Radial | 0.32583 | 0.01252 | 0.05000 |
+| Part3_E | Gaussian | 0.99481 | 0.00453 | 0.04967 |
+| Part3_E | Radial | 0.99527 | 0.00428 | 0.05000 |
+| Part11_E | Gaussian | 0.94112 | 0.00805 | 0.04967 |
+| Part11_E | Radial | 0.94435 | 0.00783 | 0.05000 |
+
+Radial noise yields a higher R2 and lower prediction MAE for all three targets in this single-seed experiment. The most pronounced gain is for Part1_E; Part3_E/Part11_E changes are small and require repeated-seed confirmation. Geometry perturbation RMS is approximately matched. For visualization, pivot the existing `comparison` DataFrame by target and method, plot grouped R2 bars across all three targets and a separate zoomed view for Part3_E and Part11_E; save a 300-DPI PNG. No real-data scatter predictions were retained by the prior multi-target loop because its `predictions` dictionary was overwritten each iteration; collect them per target if needed.
