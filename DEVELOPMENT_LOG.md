@@ -2430,3 +2430,8 @@ Next plot the six clearly identifiable Part1_E methods in a 2x3 true-vs-predicte
 ### Visualization refinement: readable Part1_E scatter comparisons
 
 Revised the six-panel True-vs-Predicted plot to use 21x13-inch layout, larger blue points (s=30, alpha=.65) with dark outlines, a prominent red dashed y=x reference, clearer labels, shared axis limits, and 300-DPI PNG export as `Part1_E_Method_Comparison.png`. Note that overplotting remains possible; consider density plots later.
+
+
+### Interpretation of six Part1_E True-vs-Predicted plots
+
+Each plot compares the held-out true Part1_E target (x-axis) to the corresponding model prediction (y-axis). Each dot is one held-out simulation, the y=x dashed line is perfect prediction, and R2 summarizes predictive fit. Results: raw noisy 0.0768, clean-PCA projection 0.0781, mixed-noise augmentation 0.0626, matched-noise augmentation 0.1004, PCA reconstruction 0.0728, autoencoder-denoised geometry 0.0041. All have weak predictive power for Part1_E at noise 0.05; horizontal clustering suggests predictions regress toward central values. The matched-noise approach is best of the six but remains weak. These are prediction plots, not geometry reconstruction accuracy or PCA explained-variance plots.
