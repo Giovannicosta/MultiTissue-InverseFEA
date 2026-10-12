@@ -2459,3 +2459,17 @@ Created `noise_models.py` and `noise_comparison.py` with a smoke test in `test_n
 - A smoke test validated deterministic behavior, equality to original Gaussian generator, preserved shapes/index, zero-noise behavior, radial displacement direction, and the comparison runner on synthetic contour samples.
 - No real-dataset metrics for radial noise have yet been collected. The hypothesis is that smooth boundary errors better approximate some segmentation errors. A fixed true label remains appropriate when noise represents *measurement corruption* only; physical deformation would require regenerated ground truth.
 - Subsequent studies should sweep levels, multiple independent seeds, noise amplitude matched by realized RMS, and geometry validity checks; training a model on one noise distribution and testing on the other is a separate robustness test.
+
+
+### First measured Gaussian versus angular-radial noise comparison (user Colab rerun)
+
+User executed `compare_noise_methods` on held-out test split for Part1_E at `noise_level=0.05`, same 100-tree Random Forest hyperparameters and original train/test splits. Observed metrics:
+
+| noise method | R2 | prediction MAE | shape-coordinate MAE | shape-coordinate RMS |
+| --- | ---: | ---: | ---: | ---: |
+| Gaussian iid X/Y coordinates | 0.076806 | 0.014744 | 0.039729 | 0.049675 |
+| smooth radial angular perturbations of existing spline samples | 0.325831 | 0.012524 | 0.038628 | 0.050000 |
+
+The radial result improves R2 by 0.249025 absolute (4.24x versus Gaussian) and lowers Part1_E prediction MAE by approximately 15.1%, while realized shape-coordinate RMS is nearly matched. An overlay of clean, Gaussian, and radial contours (sample 0) confirms the two noise patterns but individual displacements are visually small at plotted scale.
+
+**Interpretation:** Under this *particular* noise model and fixed seed, smoothly correlated radial corruption is less harmful to material-property prediction than independent coordinate corruption. This does not establish that radial noise is a more faithful physical measurement model or that it universally outperforms Gaussian noise. Noise directionality, angular correlation, and amplitude distribution vary simultaneously. Additional validation: repeat with several independent train/test seeds, sweep amplitudes, inspect many shapes and shape validity, and optionally test cross-noise generalization. Retain original clean labels when perturbations are observational noise; if representing real physical geometry changes, recompute FEM labels.
