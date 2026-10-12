@@ -2584,3 +2584,20 @@ User explicitly clarified the ultimate objective: build a modular system of spec
 ### Partial radial-autoencoder blending experiment prepared
 
 Next Colab test sweeps alpha in [0, .25, .5, .75, 1] in X_blend=(1-alpha)*X_radial+alpha*X_AE, for all targets Part1_E, Part3_E, Part11_E. Uses prior X_subtrain/X_val split and existing trained AE, samples radial corruption at 0.05 with seeds 42 and 43, trains RF100 independently for every alpha-target pair. Reports R2, modulus prediction MAE, and geometry MAE, and saves/downloads three 300-DPI line plots: Radial_Blending_R2.png, Radial_Blending_prediction_MAE.png, Radial_Blending_geometry_MAE.png. IMPORTANT methodological caveat: AE used X_val for early stopping, so this is exploratory rather than independent hyperparameter tuning; do not compare these metrics numerically as though they were previous held-out test scores. Later use a three-way split with separate AE early stopping and gating/blend tuning subsets, and reserve test for final evaluation. No blend results yet.
+
+
+### Radial AE blending sweep: reported results (exploratory train-internal validation)
+
+Alpha blend X=(1-alpha)*radial_noisy+alpha*AE_reconstructed. Noise level 0.05. User provided MAE graph and table for 15 alpha/target combinations:
+
+| alpha | Geometry MAE | Part1 R2 / prediction MAE | Part3 R2 / prediction MAE | Part11 R2 / prediction MAE |
+|---:|---:|---|---|---|
+|0.00|0.02740|0.28426 / 0.01237|0.99560 / 0.00424|0.94998 / 0.00785|
+|0.25|0.02065|0.22448 / 0.01290|0.99677 / 0.00364|0.94662 / 0.00816|
+|0.50|0.01408|0.17316 / 0.01340|0.99731 / 0.00341|0.92025 / 0.01021|
+|0.75|0.00777|0.12028 / 0.01375|0.99752 / 0.00328|0.85022 / 0.01371|
+|1.00|0.00312|0.08561 / 0.01371|0.99730 / 0.00335|0.87701 / 0.01226|
+
+Observed best among tested alphas by R2: Part1 alpha=0, Part3 alpha=0.75, Part11 alpha=0. By MAE, Part1 alpha=0, Part3 alpha=0.75, Part11 alpha=0. Part3 MAE improvement 0.00424 to 0.00328 (~22.6%) with 0.75 blending. Geometry coordinate MAE decreases as alpha increases but Part1/Part11 predictions worsen. This supports investigating target-specific preprocessing routes rather than universal denoising.
+
+CRITICAL limitation: X_val was used in AE early stopping and then reused for alpha sweep, so observed best alpha is not independently validated. Need fresh independent AE-early-stopping vs gate-selection vs final-test split; avoid claiming orchestrator implemented or validated. Preserve current figures and repeat over multiple noise seeds and tissue configurations.
