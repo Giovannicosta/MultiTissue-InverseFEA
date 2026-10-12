@@ -2381,3 +2381,8 @@ plot_prediction_diagnostics(
 ```
 
 Note: create separate diagnostics for every target/method using its own predictions on the same held-out test set; never transfer points or numerical statistics between runs.
+
+
+### Visualization plan: all tested techniques
+
+Create True-vs-Predicted and residual diagnostics for each evaluated technique (clean baseline, raw noisy, clean PCA, PCA reconstruction, matched-noise augmentation, autoencoder), for each available target. Add an aggregate Part1_E R2 comparison and separate PCA variance and geometry reconstruction plots. Use real held-out predictions; rerun experiments if prediction arrays were not retained. Keep test split/noise conditions comparable and clearly mark the clean reference as noise-free.
