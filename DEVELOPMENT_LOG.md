@@ -2618,3 +2618,8 @@ User executed fresh Colab environment successfully: downloaded `noise_models.py`
 ### Dataset source identifier investigation
 
 The full 99-column list includes a leading `File Name` column, which was missed by the keyword-based ID search (keywords did not include `file` or `name`). The rest includes modulus labels, Pressure, Inner_Radius, Outer_Radius, coordinate families, and 54 selected geometry features. A fresh Colab cell was provided to inspect filename uniqueness, missingness, examples from first/last rows, repeated filename frequencies, and repeated rows. Await output before selecting independent split groups; even unique filenames do not establish independent simulations, and filename patterns may encode shared cases.
+
+
+### Filename metadata finding and physical-configuration check
+
+All 6510 `File Name` strings are unique, but names encode `Part1_E(...)Part3_E(...)Part11_E(...)` material parameters rather than an independent simulation family identifier. Examples include filename `Part1_E(0.016)Part3_E(0.201)Part11_E(0.1807)` despite tabular Part1_E shown as 0.16; filename-vs-target mismatch needs checking, not guessing. Next Colab cell extracts three filename-encoded values via regex and compares their ranges/match counts with target columns; counts unique values of Pressure, Inner_Radius, Outer_Radius, Part7_E and Part10_E, plus unique combinations. Shared physical settings alone do not prove related cases or establish a valid grouping key. Await results before choosing evaluation splitting protocol.
