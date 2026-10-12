@@ -2613,3 +2613,8 @@ Recommended requesting a NEW independent simulation dataset from instructor for 
 ### Orchestrator Experiment 01 — environment verified and dataset inspection cell provided
 
 User executed fresh Colab environment successfully: downloaded `noise_models.py` and `noise_comparison.py`; NumPy 2.1.3, pandas 2.2.3, scikit-learn 1.6.1, TensorFlow 2.21.0; `GEOMETRY_COLS` has 54 features. Next incremental cell loads the original `2025_4_14_intermediate.csv` from `SomeoneJN/BME_Muscle_Strength_Prediction_FA25/main/Spring_25`, checks expected 54 feature and three target columns (`Part1_E`, `Part3_E`, `Part11_E`), missing values, duplicate full rows, unique geometry configurations, target distributions and first rows. Await dataset output before selecting split strategy; unique geometries alone do not rule out closely related simulations.
+
+
+### Dataset source identifier investigation
+
+The full 99-column list includes a leading `File Name` column, which was missed by the keyword-based ID search (keywords did not include `file` or `name`). The rest includes modulus labels, Pressure, Inner_Radius, Outer_Radius, coordinate families, and 54 selected geometry features. A fresh Colab cell was provided to inspect filename uniqueness, missingness, examples from first/last rows, repeated filename frequencies, and repeated rows. Await output before selecting independent split groups; even unique filenames do not establish independent simulations, and filename patterns may encode shared cases.
