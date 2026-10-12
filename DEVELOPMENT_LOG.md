@@ -2386,3 +2386,17 @@ Note: create separate diagnostics for every target/method using its own predicti
 ### Visualization plan: all tested techniques
 
 Create True-vs-Predicted and residual diagnostics for each evaluated technique (clean baseline, raw noisy, clean PCA, PCA reconstruction, matched-noise augmentation, autoencoder), for each available target. Add an aggregate Part1_E R2 comparison and separate PCA variance and geometry reconstruction plots. Use real held-out predictions; rerun experiments if prediction arrays were not retained. Keep test split/noise conditions comparable and clearly mark the clean reference as noise-free.
+
+
+### Colab rerun and prediction inventory
+
+User reports rerunning the full Colab notebook. Before plotting per-technique True-vs-Predicted and residual diagnostics, inventory existing prediction arrays in the active runtime. Reuse retained arrays; rerun only missing models. Suggested cell:
+
+```python
+import numpy as np
+for name, value in list(globals().items()):
+    if isinstance(value, (np.ndarray, list)) and ('pred' in name.lower() or 'prediction' in name.lower()):
+        print(name, np.shape(value))
+```
+
+Note: this inventory does not capture pandas Series/DataFrames or predictions only held inside dictionaries, so absence does not prove the outputs were never computed.
