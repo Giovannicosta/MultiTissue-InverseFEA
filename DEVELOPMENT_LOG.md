@@ -2400,3 +2400,8 @@ for name, value in list(globals().items()):
 ```
 
 Note: this inventory does not capture pandas Series/DataFrames or predictions only held inside dictionaries, so absence does not prove the outputs were never computed.
+
+
+### Prediction arrays recovered after full Colab rerun
+
+All eight arrays have 1,302 entries: `predictions`, `raw_pred`, `pca_pred`, `part1_test_pred`, `matched_pred`, `pred`, `recon_pred`, `part1_denoised_pred`. These appear to correspond to held-out test samples, but generic variable names may have been overwritten. Next verify each array against `y_test['Part1_E']` using R2 and MAE and compare with documented experimental results before labeling graphs. Preserve any ambiguity rather than assuming all arrays are distinct experiments.
