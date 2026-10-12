@@ -2435,3 +2435,8 @@ Revised the six-panel True-vs-Predicted plot to use 21x13-inch layout, larger bl
 ### Interpretation of six Part1_E True-vs-Predicted plots
 
 Each plot compares the held-out true Part1_E target (x-axis) to the corresponding model prediction (y-axis). Each dot is one held-out simulation, the y=x dashed line is perfect prediction, and R2 summarizes predictive fit. Results: raw noisy 0.0768, clean-PCA projection 0.0781, mixed-noise augmentation 0.0626, matched-noise augmentation 0.1004, PCA reconstruction 0.0728, autoencoder-denoised geometry 0.0041. All have weak predictive power for Part1_E at noise 0.05; horizontal clustering suggests predictions regress toward central values. The matched-noise approach is best of the six but remains weak. These are prediction plots, not geometry reconstruction accuracy or PCA explained-variance plots.
+
+
+### Clean vs noisy Part1_E diagnostic figure
+
+Added reproducible Colab plotting instructions to train a 100-tree RandomForestRegressor (random_state=42, n_jobs=-1) on clean spline geometry (`X_train_spline_base[feature_columns]`, `y_train['Part1_E']`), predict held-out clean spline geometry, and plot true-vs-predicted alongside existing `raw_pred` for noisy geometry. Both panels use identical axes, y=x reference, R2 and MAE labels, and save `Part1_E_Clean_vs_Noisy.png` at 300 DPI. Previously observed clean R2 ~0.9896 versus raw noisy R2 ~0.0768; verify new run rather than assume exact equality. Caveat: this compares clean-train/clean-test against noisy-train/noisy-test, not only test-time noise.
