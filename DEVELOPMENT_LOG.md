@@ -2492,3 +2492,8 @@ Requested to compare Part1_E, Part3_E, and Part11_E (not Part2_E/Part3_E; the ac
 | Part11_E | Radial | 0.94435 | 0.00783 | 0.05000 |
 
 Radial noise yields a higher R2 and lower prediction MAE for all three targets in this single-seed experiment. The most pronounced gain is for Part1_E; Part3_E/Part11_E changes are small and require repeated-seed confirmation. Geometry perturbation RMS is approximately matched. For visualization, pivot the existing `comparison` DataFrame by target and method, plot grouped R2 bars across all three targets and a separate zoomed view for Part3_E and Part11_E; save a 300-DPI PNG. No real-data scatter predictions were retained by the prior multi-target loop because its `predictions` dictionary was overwritten each iteration; collect them per target if needed.
+
+
+### Interpretation clarification: what 'radial performs better' means
+
+In the first matched-amplitude, single-seed comparison, models trained and tested on radially perturbed geometry achieved higher held-out material-modulus R2 and lower prediction MAE than models trained and tested on independently Gaussian-perturbed geometry. For Part1_E, R2 was 0.32583 versus 0.07681 and prediction MAE 0.01252 versus 0.01474, while shape-coordinate RMS was approximately 0.05 for both. This is a statement about downstream prediction under two corruption models, NOT proof that radial noise is more realistic or intrinsically superior. Both train and test noise distributions change, and the comparison does not isolate noise structure from all other distributional properties. Follow up with multi-seed validation and, ideally, evidence from real measurement/segmentation errors.
