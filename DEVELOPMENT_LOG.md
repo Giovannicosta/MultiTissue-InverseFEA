@@ -2653,3 +2653,8 @@ Step 5C results: all four spline geometry subsets have zero invalid coordinates.
 ### Orchestrator Experiment 01 — radial noise validated; AE scaling preparation
 
 User ran Step 6A: 54-feature coordinate MAE between radial-noisy and clean spline geometry is train 0.027467, AE validation 0.027469, routing validation 0.027524, test 0.027483. Uploaded example plot shows subtle smooth angular/radial contour deviations with nested shapes preserved in the example; this is not proof of physical realism or global nonintersection. Next one-cell Colab step fits StandardScaler on clean training spline geometry only, transforms noisy training/AE-validation inputs and their corresponding clean targets, checks shapes (3906,54) and (651,54), and verifies finite values. Routing validation and test remain excluded from AE training and early stopping. Await user output before training AE and generating learning-curve plots.
+
+
+### Orchestrator Experiment 01 — autoencoder denoising confirmed on AE validation
+
+User reports AE validation geometry MAE before denoising 0.027469 and after denoising 0.003375, a relative reduction of 87.72% on the 651-row AE validation subset. This is similar to earlier radial AE geometry results (~88.4%), though preprocessing, split and training augmentation differ. The training run stopped after 58 epochs and achieved best scaled validation MSE 0.02274567 at epoch 46. Geometry denoising quality alone does not establish downstream inverse FEA predictive gains. Next Colab cell plots one AE-validation sample's inner and outer clean/noisy/reconstructed contours and exports 300-DPI PNG, then will proceed to per-target prediction experts. Do not tune on routing validation or test prematurely.
