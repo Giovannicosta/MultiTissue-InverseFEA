@@ -2569,3 +2569,8 @@ At radial shape noise level 0.05, train seed 42 and test seed 43, AE trained wit
 - **Part11_E:** raw radial R2 **0.94435**, MAE **0.00783**; AE-denoised R2 **0.84649**, MAE **0.01347** (worse).
 
 Central finding: even dramatic coordinate reconstruction gains do not guarantee improvements to the inverse FEA prediction objective. Loss of low-amplitude predictive geometric details is a plausible hypothesis but not established. Proposed next investigation: validation-selected blending of raw radial and AE-reconstructed inputs or a supervised/task-aware denoising objective; avoid using the held-out test set to pick blend weights. Caveat: these are exploratory, single-seed comparisons.
+
+
+### Visualization convention for future experiments
+
+User requested graphs **for every benchmark**, not only numeric output. Each experiment should save (300-DPI PNG, Colab downloadable) paired per-target R2 and prediction MAE comparisons against the raw radial baseline, plus geometry MAE before/after denoising when applicable. When per-sample predictions are available, also save true-versus-predicted scatter and residual plots, per target; do not label aggregate results as predictions or fabricate arrays. Chart code provided for current radial AE experiment uses existing `ae_results` and geometry MAE 0.027416 -> 0.003177 to save `Radial_Autoencoder_Results.png`, with no retraining. Build automatic figure generation into subsequent experiment cells and preserve charts as research artifacts.
