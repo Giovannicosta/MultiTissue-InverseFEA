@@ -2425,3 +2425,8 @@ Metrics computed against `y_test["Part1_E"]` (1,302 held-out samples):
 Earlier autoencoder run: R2 0.0258, MAE 0.014777, RMSE 0.017697. Current run differs; keep both runs documented and investigate training randomness/overwritten arrays. The unlabeled `predictions` array should not be used for graphs without provenance. Confirm same row alignment before comparison.
 
 Next plot the six clearly identifiable Part1_E methods in a 2x3 true-vs-predicted grid using the shared y_test array, with ideal y=x diagonal and identical axis ranges.
+
+
+### Visualization refinement: readable Part1_E scatter comparisons
+
+Revised the six-panel True-vs-Predicted plot to use 21x13-inch layout, larger blue points (s=30, alpha=.65) with dark outlines, a prominent red dashed y=x reference, clearer labels, shared axis limits, and 300-DPI PNG export as `Part1_E_Method_Comparison.png`. Note that overplotting remains possible; consider density plots later.
