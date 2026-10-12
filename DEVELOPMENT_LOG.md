@@ -2526,3 +2526,22 @@ User Colab output, radial noise_level=0.05, train/test seeds 42/43, PCA fit to c
 Interpretation: geometric coordinate accuracy is not a sufficient surrogate for downstream inverse FEA prediction accuracy. A possible hypothesis is that aggressive PCA compression removes subtle Part1_E-informative geometry, even while reducing average reconstruction error. No causal mechanism established.
 
 Next single-cell experiment provided: sweep PCA component count [3,6,9,12,18,27,36,45,54] for Part1_E; fit PCA on clean training geometry for each setting, reconstruct noisy radial train and test sets, train 100-tree RF, report held-out prediction R2/MAE and reconstructed geometry MAE. 54-PC reconstruction is a control expected to reproduce raw radial geometry/predictions to numerical precision. Avoid tuning final choices on test-set results without later separate validation.
+
+
+### Radial PCA component sweep: Part1_E
+
+Single-seed radial-noise experiment (noise_level 0.05), PCA fit on clean train, reconstruct noisy train/test, RF100 Part1_E:
+
+| PCA components | Test R2 | Prediction MAE | Geometry MAE |
+|---:|---:|---:|---:|
+|3|0.02189|0.01504|0.00772|
+|6|0.08027|0.01461|0.01232|
+|9|0.08541|0.01459|0.01408|
+|12|0.09273|0.01457|0.01476|
+|18|0.10954|0.01445|0.01852|
+|27|0.11753|0.01444|0.02096|
+|36|0.15931|0.01406|0.02433|
+|45|0.22367|0.01347|0.02735|
+|54|0.32583|0.01252|0.02742|
+
+Key finding: greater PCA dimensionality monotonically improves held-out Part1_E prediction R2 and prediction MAE, but worsens geometry coordinate MAE against the clean reference. Full 54-PC reconstruction reproduces the un-denoised radial baseline. Thus minimum coordinate reconstruction error does not imply best inverse FEA prediction. Hypothesis: low-variance geometric details discarded by PCA are predictive for Part1_E; not yet proven. This sweep used test data for exploratory comparison; use train-only validation for model selection and final untouched test for confirmatory evaluation. Next benchmark could be radial-noise-trained autoencoder or radial data augmentation, maintaining all-target evaluation and clean/raw baselines.
