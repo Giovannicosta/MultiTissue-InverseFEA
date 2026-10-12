@@ -2557,3 +2557,15 @@ Train a nonlinear 54->128->64->32->64->128->54 autoencoder using Gaussian-like s
 User reports early stopping after **36 epochs** for radial-noise-trained, 54-coordinate denoising autoencoder. On held-out *validation subset of training geometries* (not the final test set), noisy geometry MAE **0.027417** and autoencoder-reconstructed geometry MAE **0.003168**, a reported **88.44% reduction**. This is a validation-only geometric result, **not evidence of improved elastic modulus predictions**. Nine-component PCA earlier reduced test geometry MAE ~48.7% but worsened Part1_E prediction; evaluation populations differed, so do not treat numeric contrast as controlled head-to-head.
 
 Next provided single Colab evaluation cell: regenerate radial-noisy train/test geometries with level=0.05 seeds 42/43; apply trained autoencoder and scaler to both (without refitting); report held-out test geometry MAE before/after; train RF100 per target Part1_E / Part3_E / Part11_E using denoised training geometries and evaluate denoised test geometries against prior radial baselines (R2 0.32583 / 0.99527 / 0.94435; MAE approximately 0.01252 / 0.00428 / 0.00783). Await test metrics. Caveat: RF uses all original training rows, including the AE validation subset used in early stopping; these remain inside the designated training split, not held-out test leakage. Treat experiment as exploratory; compare repeated seeds and preserve untouched final test in subsequent redesign.
+
+
+### Radial autoencoder held-out test results
+
+At radial shape noise level 0.05, train seed 42 and test seed 43, AE trained with train-internal clean/noisy split:
+
+- Held-out test geometry MAE before AE: **0.027416**; after AE: **0.003177** (about **88.4% lower**).
+- **Part1_E:** raw radial R2 **0.32583**, MAE **0.01252**; AE-denoised R2 **0.08265**, MAE **0.01442** (worse).
+- **Part3_E:** raw radial R2 **0.99527**, MAE **0.00428**; AE-denoised R2 **0.99727**, MAE **0.00332** (better; ~22.4% lower prediction MAE).
+- **Part11_E:** raw radial R2 **0.94435**, MAE **0.00783**; AE-denoised R2 **0.84649**, MAE **0.01347** (worse).
+
+Central finding: even dramatic coordinate reconstruction gains do not guarantee improvements to the inverse FEA prediction objective. Loss of low-amplitude predictive geometric details is a plausible hypothesis but not established. Proposed next investigation: validation-selected blending of raw radial and AE-reconstructed inputs or a supervised/task-aware denoising objective; avoid using the held-out test set to pick blend weights. Caveat: these are exploratory, single-seed comparisons.
