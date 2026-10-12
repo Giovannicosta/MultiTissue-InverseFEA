@@ -2545,3 +2545,8 @@ Single-seed radial-noise experiment (noise_level 0.05), PCA fit on clean train, 
 |54|0.32583|0.01252|0.02742|
 
 Key finding: greater PCA dimensionality monotonically improves held-out Part1_E prediction R2 and prediction MAE, but worsens geometry coordinate MAE against the clean reference. Full 54-PC reconstruction reproduces the un-denoised radial baseline. Thus minimum coordinate reconstruction error does not imply best inverse FEA prediction. Hypothesis: low-variance geometric details discarded by PCA are predictive for Part1_E; not yet proven. This sweep used test data for exploratory comparison; use train-only validation for model selection and final untouched test for confirmatory evaluation. Next benchmark could be radial-noise-trained autoencoder or radial data augmentation, maintaining all-target evaluation and clean/raw baselines.
+
+
+### Radial-trained denoising autoencoder: first training cell prepared (awaiting results)
+
+Train a nonlinear 54->128->64->32->64->128->54 autoencoder using Gaussian-like standardization fit on CLEAN subtraining geometry and MSE loss between corrupted radial inputs and clean targets. Use an 80/20 split of the 5208 clean training geometries before augmenting, three independent radial noise realizations (seeds 101/102/103) at level 0.05 on subtrain, a disjoint clean validation subset with radial noise seed 404, Adam(0.001), early stopping by validation loss patience=12, max 100 epochs, batch 128. Evaluate raw-noisy versus AE-denoised geometry MAE on validation only; hold test out until model pipeline evaluation. Model variables: `autoencoder_radial`, `scaler_ae`, `history_radial`. Revisit training on full train after validation-based tuning before final held-out benchmark if appropriate. No results yet.
