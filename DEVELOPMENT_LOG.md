@@ -2312,3 +2312,72 @@ plt.show()
 ```
 
 The same pattern can later be repeated for Outer Shape and Bottom geometry.
+
+
+### Visualization standards from prior researcher's Nov16 diagnostics
+
+Previous research examples supplied:
+- `nov16_noisy_from_clean: True vs Predicted (Part1_E)` and residual histogram
+- `nov16_noisy_from_clean: True vs Predicted (Part3_E)` and residual histogram
+
+Qualitative reading:
+- Part1_E predicted outputs collapse toward a narrow central interval relative to the observed true values; weak prediction despite a roughly centered residual distribution.
+- Part3_E predictions follow the ideal diagonal more clearly, but with noticeable dispersion, potential bias or compressed high-end predictions.
+- A residual histogram alone cannot establish strong predictive performance or correlation.
+- Prior Nov16 output ranges and dataset size appear different from current Colab run; do not directly compare MAE/R2 without harmonizing dataset, target units/scaling, noise level, test split, and protocol.
+
+Recommended standard diagnostic bundle for each target and method:
+1. True-vs-predicted scatter with y=x reference, matched axes, transparent points and R2/MAE/RMSE annotation.
+2. Histogram of residual (True - Predicted) with zero reference.
+3. Residual-vs-true scatter to diagnose bias and heteroscedasticity.
+4. Cross-method R2/MAE summary computed from the same held-out test samples.
+5. PCA scree/cumulative variance and clean/noisy/denoised geometry plots for the preprocessing questions.
+
+Reusable plotting code for the current Part1_E autoencoder experiment:
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+
+def plot_prediction_diagnostics(y_true, y_pred, target, method):
+    truth = np.asarray(y_true, dtype=float).ravel()
+    pred = np.asarray(y_pred, dtype=float).ravel()
+    residual = truth - pred
+    r2 = r2_score(truth, pred)
+    mae = mean_absolute_error(truth, pred)
+    rmse = np.sqrt(mean_squared_error(truth, pred))
+
+    low = min(truth.min(), pred.min())
+    high = max(truth.max(), pred.max())
+
+    fig, ax = plt.subplots(1, 3, figsize=(17, 4.8))
+    ax[0].scatter(truth, pred, s=13, alpha=0.22)
+    ax[0].plot([low, high], [low, high], '--', color='black', label='Ideal')
+    ax[0].set(xlabel=f'True {target}', ylabel=f'Predicted {target}', title='True vs predicted')
+    ax[0].set_xlim(low, high)
+    ax[0].set_ylim(low, high)
+    ax[0].set_aspect('equal', adjustable='box')
+    ax[0].legend()
+
+    ax[1].hist(residual, bins=35)
+    ax[1].axvline(0, color='black', linestyle='--')
+    ax[1].set(xlabel='Residual (True - Predicted)', ylabel='Count', title='Residual distribution')
+
+    ax[2].scatter(truth, residual, s=13, alpha=0.22)
+    ax[2].axhline(0, color='black', linestyle='--')
+    ax[2].set(xlabel=f'True {target}', ylabel='Residual (True - Predicted)', title='Residual vs true')
+
+    fig.suptitle(f'{method} | {target} | R2={r2:.4f} | MAE={mae:.6f} | RMSE={rmse:.6f}')
+    fig.tight_layout()
+    plt.show()
+
+plot_prediction_diagnostics(
+    y_test['Part1_E'],
+    part1_denoised_pred,
+    'Part1_E',
+    'Autoencoder denoising'
+)
+```
+
+Note: create separate diagnostics for every target/method using its own predictions on the same held-out test set; never transfer points or numerical statistics between runs.
