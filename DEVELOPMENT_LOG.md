@@ -2884,3 +2884,8 @@ User's orchestrator factory detected only tissue_count=[1] and correctly routed 
 ### Existing-dataset audit before learning curves (2026-10-13)
 
 The user explicitly prohibits generating synthetic/new simulation data without asking first; use only existing 6,510 simulation rows until instructor supplies new data. Existing Colab summary: train=3,906, test=1,302; unique target values Part1_E=61, Part3_E=2,653, Part11_E=1,483; zero missing values for these targets. Target ranges: Part1_E 0.10-0.16; Part3_E 0.20-0.50; Part11_E 0.10-0.25. Before training-size experiments, audit exact geometry duplicates and train/test geometry overlap using canonical 54-feature preprocessing; dataset target diversity does not establish geometric independence. No data generation or retraining at this audit step.
+
+
+### Exact geometry duplicate audit completed
+
+Using `preprocess_geometry` on the existing 6,510 simulation rows, the user reported 6,510 unique geometry signatures, zero exact duplicate rows, 3,906 unique training signatures, 1,302 unique test signatures, and zero shared training/test signatures (0% test overlap). Hash-based exact-signature audit is reassuring but does not rule out near-duplicates, geometrically related simulation families, or other leakage. Next: nearest-neighbor geometry distance audit on the existing train/test features, using training-only scaling; no synthetic data, no model retraining. User explicitly requires permission before any data generation.
