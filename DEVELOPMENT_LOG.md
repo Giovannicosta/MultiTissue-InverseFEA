@@ -2889,3 +2889,8 @@ The user explicitly prohibits generating synthetic/new simulation data without a
 ### Exact geometry duplicate audit completed
 
 Using `preprocess_geometry` on the existing 6,510 simulation rows, the user reported 6,510 unique geometry signatures, zero exact duplicate rows, 3,906 unique training signatures, 1,302 unique test signatures, and zero shared training/test signatures (0% test overlap). Hash-based exact-signature audit is reassuring but does not rule out near-duplicates, geometrically related simulation families, or other leakage. Next: nearest-neighbor geometry distance audit on the existing train/test features, using training-only scaling; no synthetic data, no model retraining. User explicitly requires permission before any data generation.
+
+
+### Nearest-neighbor geometry similarity audit completed
+
+Existing data only; no new/synthetic simulation rows and no retraining. StandardScaler fitted on 3,906 training geometries; Euclidean nearest-neighbor distances computed between training rows (excluding self) and 1,302 test rows to training. Train-to-train distances min 0.013724, P5 0.081368, median 0.216221, P95 0.645751, max 1.496250. Test-to-train min 0.023784, P5 0.080224, median 0.217766, P95 0.641178, max 1.534600. 49.69% of test rows closer than median train-to-train nearest-neighbor distance. This suggests comparable local feature-space density but does not rule out correlated simulation families or prove out-of-distribution generalization. Next: learning curves on only existing training pool, evaluate on held-out validation pool; avoid using previously inspected test set for model selection. No new data generated; retraining on subsets of real rows is permitted.
