@@ -2839,3 +2839,8 @@ User created `03_MultiTissue_Orchestrator.ipynb` but has NOT downloaded the prio
 ### Colab 03 Step 2 — transfer model archive
 
 User confirmed `one_tissue_moe_v1.zip` downloaded from Colab 02. Provided a Colab 03 upload/extract cell that prompts upload, verifies expected archive filenames, then extracts exactly the six trusted model artifacts (`config.json`, two joblib RFs, gate_scaler.joblib, regression_gate.weights.h5, noise_models.py) under `/content/one_tissue_moe_v1`; prints sizes. Wait for file restoration before importing the `OneTissueMoE` GitHub module and constructing expert registry. No retraining and no unsupported tissue counts assumed.
+
+
+### Colab 03 archive restored; verify imported expert inference
+
+User uploaded `one_tissue_moe_v1.zip` to Colab 03 and extracted all six expected artifacts under `/content/one_tissue_moe_v1`: config.json 1,517 bytes, expert_clean.joblib 27,994,465 bytes, expert_robust.joblib 117,492,769 bytes, gate_scaler.joblib 1,967 bytes, noise_models.py 4,700 bytes, regression_gate.weights.h5 48,144 bytes. Compressed upload size 29,204,716 bytes, consistent with much larger uncompressed forests. Next incremental Colab Step 3 downloads `one_tissue_moe.py` and `geometry_preprocessing.py` from the repository, loads the one-tissue Part1_E specialist from the extracted directory, reads one original simulation row, applies the exact Notebook 02 spline preprocessing, predicts Part1_E and prints a finite-prediction check. This is a smoke test, not an unbiased accuracy measurement. Next Step 4 will implement a tissue-count-based expert registry and callable orchestration interface, initially supporting only tissue_count=1 and Part1_E.
