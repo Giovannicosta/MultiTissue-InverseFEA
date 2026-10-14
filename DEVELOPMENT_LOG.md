@@ -2834,3 +2834,8 @@ User ran Step 10 and confirmed `Spline preprocessing matches: True`, `MoE predic
 ### Colab 03 started; trained MoE artifact transfer pending
 
 User created `03_MultiTissue_Orchestrator.ipynb` but has NOT downloaded the prior `one_tissue_moe_v1.zip` from Notebook 02. Before writing orchestration logic, asked user to return to Colab 02 and download `/content/one_tissue_moe_v1.zip` through `google.colab.files.download`, printing an archive size check; if previous runtime reset, avoid retraining prematurely and check persisted Google Drive or saved model files. On retrieval, upload the archive to Notebook 03, extract trusted artifacts, import verified `one_tissue_moe.py` and `geometry_preprocessing.py`, and smoke-test one-tissue Part1_E inference before adding registry and routing. Other tissue-count experts are not yet trained. Keep instructions one cell at a time.
+
+
+### Colab 03 Step 2 — transfer model archive
+
+User confirmed `one_tissue_moe_v1.zip` downloaded from Colab 02. Provided a Colab 03 upload/extract cell that prompts upload, verifies expected archive filenames, then extracts exactly the six trusted model artifacts (`config.json`, two joblib RFs, gate_scaler.joblib, regression_gate.weights.h5, noise_models.py) under `/content/one_tissue_moe_v1`; prints sizes. Wait for file restoration before importing the `OneTissueMoE` GitHub module and constructing expert registry. No retraining and no unsupported tissue counts assumed.
