@@ -22,6 +22,7 @@ class MultiTissueOrchestrator:
     def __init__(self):
         self._experts = {}
         self._preprocessors = {}
+        self._pipelines = {}
 
     def register(self, tissue_count, name, model, targets=("Part1_E",)):
         if type(tissue_count) is not int or tissue_count < 1:
@@ -96,3 +97,34 @@ class MultiTissueOrchestrator:
         prepared = self._preprocessors[tissue_count](raw_geometry)
         result = self.predict(prepared, tissue_count=tissue_count, target=target)
         return {**result, "preprocessing_skill": type(self._preprocessors[tissue_count]).__name__}
+
+    def register_pipeline(self, tissue_count, skills):
+        """Register ordered (name, callable) preprocessing/validation skills."""
+        if type(tissue_count) is not int or tissue_count < 1:
+            raise ValueError("tissue_count must be a positive integer")
+        if tissue_count in self._pipelines:
+            raise ValueError(f"Pipeline already registered for tissue_count={tissue_count}")
+        steps = []
+        for name, skill in skills:
+            if not isinstance(name, str) or not name.strip() or not callable(skill):
+                raise ValueError("Each step needs a non-empty name and callable skill")
+            steps.append((name, skill))
+        if not steps:
+            raise ValueError("Pipeline must contain at least one skill")
+        if len({name for name, _ in steps}) != len(steps):
+            raise ValueError("Pipeline skill names must be unique")
+        self._pipelines[tissue_count] = tuple(steps)
+
+    def predict_pipeline(self, raw_geometry, *, tissue_count, target="Part1_E"):
+        """Run each registered skill in order, then the selected model."""
+        if tissue_count not in self._experts:
+            raise ValueError(f"No trained expert for tissue_count={tissue_count}; available={self.available_tissue_counts()}")
+        if tissue_count not in self._pipelines:
+            raise ValueError(f"No skill pipeline for tissue_count={tissue_count}")
+        prepared = raw_geometry
+        executed = []
+        for name, skill in self._pipelines[tissue_count]:
+            prepared = skill(prepared)
+            executed.append(name)
+        return {**self.predict(prepared, tissue_count=tissue_count, target=target),
+                "executed_skills": executed}
