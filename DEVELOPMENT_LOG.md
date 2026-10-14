@@ -2735,3 +2735,8 @@ User's Part1_E routing-validation results: single-noise RF100 R2 0.337622, MAE 0
 ### Step 11C runtime failure: empty Random Forest estimators
 
 User got IndexError: list index out of range in sklearn RandomForestRegressor.predict during mixed training comparison, at self.estimators_[0]._support_missing_values(X). This means an estimator object has an empty estimators_ list; root cause is not yet known. Before suggesting a full retrain, provided a single Colab diagnostic cell printing type, estimators_ length (or no fit), and configured n_estimators for both robust_model and mixed_model. Await output; if either is zero/missing, refit only the affected model(s) from existing X_augmented/y_augmented and X_mixed/y_mixed respectively; avoid resetting dataset or restarting session unnecessarily.
+
+
+### Step 11C diagnostic: broken multi-noise model object
+
+User inspected RandomForestRegressor objects after IndexError in predict: robust_model reports 0 fitted trees despite n_estimators=100, while mixed_model reports all 100 fitted trees. The cause of robust_model's empty estimators_ is not established; previously reported Part1 multi-noise results are unchanged. Supplied a single Colab repair cell rebuilding and fitting robust_model only from existing X_augmented/y_augmented, asserting both models contain 100 trees, then evaluating robust_model and intact mixed_model on clean and noisy routing-validation geometry. Exports a 300-DPI MAE comparison plot. Stay in same Colab and await results before choosing a final one-tissue noise strategy.
