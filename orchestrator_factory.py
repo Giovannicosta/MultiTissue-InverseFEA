@@ -8,6 +8,7 @@ Only load trusted model artifacts; joblib deserialization runs pickle code.
 from pathlib import Path
 from multi_tissue_orchestrator import MultiTissueOrchestrator
 from one_tissue_moe import OneTissueMoE
+from one_tissue_multi_target import OneTissueMultiTargetExpert
 from orchestrator_skills import GeometryValidationSkill, OneTissueGeometrySkill
 
 
@@ -22,13 +23,20 @@ def build_orchestrator(one_tissue_artifact_dir):
             f"Extracted one-tissue model directory not found: {artifact_dir}"
         )
 
-    expert = OneTissueMoE.load(artifact_dir)
+    if all((artifact_dir / name).is_file() for name in (
+        "Part3_E_expert.joblib", "Part11_E_expert.joblib"
+    )):
+        expert = OneTissueMultiTargetExpert.load(artifact_dir)
+        targets = ("Part1_E", "Part3_E", "Part11_E")
+    else:
+        expert = OneTissueMoE.load(artifact_dir)
+        targets = ("Part1_E",)
     orchestrator = MultiTissueOrchestrator()
     orchestrator.register(
         tissue_count=1,
         name="OneTissue_Part1_MoE",
         model=expert,
-        targets=("Part1_E",),
+        targets=targets,
     )
     orchestrator.register_pipeline(
         tissue_count=1,
