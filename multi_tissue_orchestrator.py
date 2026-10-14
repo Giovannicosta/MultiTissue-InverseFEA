@@ -21,6 +21,7 @@ class ExpertRegistration:
 class MultiTissueOrchestrator:
     def __init__(self):
         self._experts = {}
+        self._preprocessors = {}
 
     def register(self, tissue_count, name, model, targets=("Part1_E",)):
         if type(tissue_count) is not int or tissue_count < 1:
@@ -69,3 +70,29 @@ class MultiTissueOrchestrator:
             "target": target,
             "predictions": values,
         }
+
+
+    def register_preprocessing_skill(self, tissue_count, skill):
+        """Register a raw-geometry -> model-geometry transformation."""
+        if type(tissue_count) is not int or tissue_count < 1:
+            raise ValueError("tissue_count must be a positive integer")
+        if not callable(skill):
+            raise TypeError("Preprocessing skill must be callable")
+        if tissue_count in self._preprocessors:
+            raise ValueError(f"Preprocessor already registered for tissue_count={tissue_count}")
+        self._preprocessors[tissue_count] = skill
+
+    def predict_raw(self, raw_geometry, *, tissue_count, target="Part1_E"):
+        """Run registered preprocessing skill, then route to the trained expert."""
+        if tissue_count not in self._experts:
+            raise ValueError(
+                f"No trained expert for tissue_count={tissue_count}; "
+                f"available={self.available_tissue_counts()}"
+            )
+        if tissue_count not in self._preprocessors:
+            raise ValueError(
+                f"No preprocessing skill for tissue_count={tissue_count}"
+            )
+        prepared = self._preprocessors[tissue_count](raw_geometry)
+        result = self.predict(prepared, tissue_count=tissue_count, target=target)
+        return {**result, "preprocessing_skill": type(self._preprocessors[tissue_count]).__name__}
