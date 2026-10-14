@@ -57,7 +57,11 @@ class MultiTissueOrchestrator:
                 f"Expert '{expert.name}' does not support {target!r}; "
                 f"supported={expert.targets}"
             )
-        values = np.asarray(expert.model.predict(geometry), dtype=float).reshape(-1)
+        prediction_fn = getattr(expert.model, "predict_target", None)
+        if callable(prediction_fn):
+            values = np.asarray(prediction_fn(geometry, target), dtype=float).reshape(-1)
+        else:
+            values = np.asarray(expert.model.predict(geometry), dtype=float).reshape(-1)
         if not np.isfinite(values).all():
             raise ValueError("Expert generated non-finite predictions")
         n_rows = len(geometry)
