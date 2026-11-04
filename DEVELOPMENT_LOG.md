@@ -2894,3 +2894,19 @@ Using `preprocess_geometry` on the existing 6,510 simulation rows, the user repo
 ### Nearest-neighbor geometry similarity audit completed
 
 Existing data only; no new/synthetic simulation rows and no retraining. StandardScaler fitted on 3,906 training geometries; Euclidean nearest-neighbor distances computed between training rows (excluding self) and 1,302 test rows to training. Train-to-train distances min 0.013724, P5 0.081368, median 0.216221, P95 0.645751, max 1.496250. Test-to-train min 0.023784, P5 0.080224, median 0.217766, P95 0.641178, max 1.534600. 49.69% of test rows closer than median train-to-train nearest-neighbor distance. This suggests comparable local feature-space density but does not rule out correlated simulation families or prove out-of-distribution generalization. Next: learning curves on only existing training pool, evaluate on held-out validation pool; avoid using previously inspected test set for model selection. No new data generated; retraining on subsets of real rows is permitted.
+
+
+### 2026-11-03 — Colab 04 Part1_E shape analysis and denoising experiments (Steps 1–31)
+
+A detailed research write-up was committed to [`research/PART1E_SHAPE_ANALYSIS_2026-11-03.md`](research/PART1E_SHAPE_ANALYSIS_2026-11-03.md). This summarizes user-reported measurements from `04_Shape_Analysis_Comparison.ipynb`; the notebook and resulting figures are not yet committed.
+
+- **Existing simulation data only:** 6,510 rows, 54 geometry columns (18 Bottom, 18 Inner, 18 Outer); latest exploratory comparison uses 3,906 training simulations, 1,302 validation simulations, radial noise level 0.05 plus bottom jitter 0.01. Earlier 1,302-row test was already viewed; do not call it pristine.
+- **Clean geometry:** separate-group PCA 18 features R² 0.996604 / MAE 0.000692 on early 80/20 comparison; later validation raw 54 R² 0.984254 / MAE 0.001611.
+- **Noise failure:** clean-trained raw54 on radial-noisy validation R² -1.232819 / MAE 0.021089. Bottom-only corruption R² -0.440418; Inner-only R² -1.456713; Outer-only R² 0.945794; group dependency is model/condition-specific.
+- **Shape representation:** PCA, tested Kernel PCA and 2D autoencoder Inner embeddings did not improve overall radial robustness; joint Bottom + Inner PCA (4, 8, 16 PCs) underperformed raw features. Noise-fitted or mixed-fitted PCA helps over clean-fitted PCA but still underperforms raw features. Inner area/perimeter/mean radius were highly stable under noise, yet using only those features gave clean validation R² -0.347279.
+- **Predictive groups:** Inner-only R² 0.890747, Bottom-only 0.810109, Outer-only 0.728316. Bottom + Inner clean R² 0.984360 / MAE 0.001608 vs all 54 R² 0.984254 / MAE 0.001611.
+- **Radial specialist:** 36-feature Bottom + Inner specialist R² 0.507630 / MAE 0.010204 on noisy validation, better than all-54 radial specialist R² 0.474209 / MAE 0.010553.
+- **Best notebook-04 exploratory result:** ExtraTrees supervised geometry denoiser using four noisy realizations per existing training case, followed by clean-trained Bottom + Inner RF: **R² 0.632186, MAE 0.008694**, a **14.8%** MAE reduction compared with the 36-feature radial specialist. Geometry coordinate MAE fell from 0.021900 noisy to 0.001923 reconstructed (about 91.2%). Denoised predictions still exhibit compression toward the Part1_E middle; region/range plots show more severe prediction errors at both target extremes.
+- **Next, NOT yet executed:** Step 32 five-fold out-of-fold reconstruction-aware predictor, followed by independent validation and replication across corruption seeds and intensities. No outcome is claimed for Step 32.
+
+These comparisons do not replace the earlier one-tissue MoE/orchestrator results: they use a different experimental context. Do not claim tissue-count generalization or independent test performance from these exploratory metrics.
