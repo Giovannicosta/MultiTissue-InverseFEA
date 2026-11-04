@@ -3,19 +3,20 @@
 **Recorded:** 2026-11-03  
 **Working notebook:** `04_Shape_Analysis_Comparison.ipynb` (Google Colab; **not yet committed to this repository**)  
 **Research objective:** Predict `Part1_E` from geometry while improving robustness to noisy observed contours/coordinates.  
-**Status:** Steps 1–31 reported and discussed; Step 32 (out-of-fold reconstruction-aware predictor) proposed but **no results reported**.
+**Status:** Steps 1–32 reported and discussed; Step 32 completed (five-fold out-of-fold reconstruction-aware predictor). Results are exploratory validation metrics.
 
 ## Executive summary
 
-The original clean-geometry problem is largely solved by the tested Random Forest models (R² about 0.98–0.997). The main obstacle is **noise robustness**. Clean-trained models collapse under radial contour noise with bottom-coordinate jitter. Noise-trained specialists help, and combining **geometry denoising with a clean-trained predictor** produced the strongest result **in notebook 04 on the explored validation split**:
+The original clean-geometry problem is largely solved by the tested Random Forest models (R² about 0.98–0.997). The main obstacle is **noise robustness**. Clean-trained models collapse under radial contour noise with bottom-coordinate jitter. Noise-trained specialists help, and combining **geometry denoising with a clean-trained predictor** initially improved prediction; the subsequent **out-of-fold reconstruction-aware predictor is now the strongest evaluated method in notebook 04 on the explored validation split**:
 
 | Method, all evaluated on the same noisy validation rows | Part1_E R² | Part1_E MAE |
 | --- | ---: | ---: |
 | Clean-trained Bottom + Inner RF, directly on noise | -1.254235 | 0.021212 |
 | Noise-trained Bottom + Inner RF specialist | 0.507630 | 0.010204 |
-| **ExtraTrees geometry denoiser -> clean-trained Bottom + Inner RF** | **0.632186** | **0.008694** |
+| ExtraTrees geometry denoiser -> clean-trained Bottom + Inner RF | 0.632186 | 0.008694 |
+| **ExtraTrees geometry denoiser -> OOF reconstruction-aware RF** | **0.7480** | **0.006762** |
 
-Relative to the radial specialist, denoising increased R² by 0.124556 and lowered prediction MAE by approximately **14.8%**. Mean absolute *geometry coordinate* error fell from 0.021900 to 0.001923 (about **91.2%** lower). Despite this, predictions still regress toward the middle of the `Part1_E` range, particularly at 0.10–0.11 and 0.15–0.16.
+The denoiser + clean predictor initially improved R² by 0.124556 and reduced prediction MAE about **14.8%** versus the radial specialist. Mean absolute *geometry coordinate* error fell from 0.021900 to 0.001923 (about **91.2%** lower). Training the downstream predictor on five-fold out-of-fold reconstructions further improved R² from **0.6322 to 0.7480** and reduced MAE from **0.008694 to 0.006762** (about **22.2%** lower), or about **33.7%** lower MAE than the radial specialist. Earlier plots show regression toward the mean, especially near `Part1_E` 0.10–0.11 and 0.15–0.16; whether this bias persists to the same degree after Step 32 has **not yet been plotted or measured by target bin**.
 
 **Interpretation:** Reconstructing clean geometry can restore useful prediction information that is lost when a clean-trained predictor receives noisy coordinates. Lower coordinate MAE does **not** guarantee proportional improvement in modulus prediction.
 
@@ -159,11 +160,32 @@ Step 31 compared the **same clean-trained Bottom + Inner predictor** receiving p
 
 Prediction compression remains: small actual moduli tend to be overpredicted and large actual moduli underpredicted. High average geometric reconstruction accuracy alone does not recover every target-relevant feature. Further diagnosis should measure per-feature and per-region distortion, signed prediction residuals, and correlations using the exact saved outputs rather than visual estimates.
 
-## 7. Proposed next experiment (not yet completed)
+## 7. Step 32 completed: cross-fitted reconstruction-aware Part1_E predictor
 
-**Step 32:** train a `RandomForestRegressor` predictor on **out-of-fold reconstructed training geometry** (five-fold cross-fitting of denoisers over unique training simulation rows). Use the fully trained Step 28 denoiser only for validation reconstruction. Compare the reconstruction-aware predictor against frozen `bi_radial` and `bi_clean(denoised)` on the same validation rows. This tests whether a predictor adapted to reconstruction artifacts can improve beyond R² 0.632186. **No Step 32 metrics exist yet.**
+**Hypothesis:** Even low-error reconstructions differ systematically from perfectly clean geometry, so a predictor trained only on clean geometry is sensitive to the denoiser's residual artifacts. Training on held-out reconstructions may improve end-to-end prediction.
 
-Suggested follow-up if Step 32 fails: target-aware denoising or joint reconstruction-plus-Part1_E training, careful comparison of Inner vs Bottom regional reconstruction, multiple noise intensities and random seeds, and uncertainty/calibration at modulus extremes. Do not generate additional FEA simulations without authorization.
+**Implementation used in Colab (user-reported):**
+
+1. Keep the 3,906 original training simulations grouped by original row.
+2. Split into five folds with `KFold(n_splits=5, shuffle=True, random_state=42)`.
+3. For each fold, train `ExtraTreesRegressor(n_estimators=100, min_samples_leaf=2, random_state=42, n_jobs=-1)` to map four radial-noisy views of **other training simulations** to their clean 36-coordinate Bottom + Inner geometry. All noisy views of held-out simulations stay out of denoiser fitting.
+4. Reconstruct each held-out simulation using **the first radial-noise realization** and its fold-specific denoiser, forming one out-of-fold (OOF) 36-feature reconstruction per original training simulation.
+5. Train `RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)` using OOF reconstructed training geometry and original `Part1_E` labels.
+6. At validation time, pass the existing Step 28 reconstructed validation geometry through the new reconstruction-aware predictor. This Step 28 denoiser uses 150 ExtraTrees, unlike the 100-tree fold denoisers. No validation labels are used to fit either model.
+
+**Reported five-fold execution:** all five reconstruction folds completed successfully.
+
+| Method | Noisy validation R² | Noisy validation MAE |
+| --- | ---: | ---: |
+| Radial Bottom + Inner specialist | 0.5076 | 0.010204 |
+| Denoiser + clean predictor | 0.6322 | 0.008694 |
+| **Denoiser + reconstruction-aware predictor** | **0.7480** | **0.006762** |
+
+**Incremental benefit:** R² +0.1158 and MAE approximately **22.2% lower** versus denoising followed by the clean-trained predictor; R² +0.2404 and MAE **33.7% lower** versus direct radial-specialist prediction. The reported performance increase supports the hypothesis that adapting downstream regression to reconstructed inputs is valuable under this condition.
+
+**Interpretation limits:** These are user-reported, repeatedly explored **validation** results, not independent final-test estimates. The OOF predictor is trained on reconstructions from 100-tree denoisers using one held-out noisy view while the validation reconstructions come from the 150-tree Step 28 denoiser trained on all available training simulations. This distribution mismatch should be evaluated explicitly if the pipeline is packaged. No updated per-modulus-bin error plot has yet been supplied for the reconstruction-aware predictor, so a claim that it eliminates prediction compression would be premature.
+
+**Recommended next experiment:** plot paired `Actual vs. Predicted Part1_E` scatter and signed residuals for the three models on the same validation rows; compare MAE by modulus bin to check whether the new model improves the 0.10–0.11 and 0.15–0.16 extremes. Then design a genuinely independent evaluation (new simulations, grouped holdouts, or proper nested validation) and repeat across noise seeds/intensities. **Do not generate FEA simulations without user authorization.**
 
 ## 8. Scientific cautions and reproducibility
 
@@ -177,4 +199,4 @@ Suggested follow-up if Step 32 fails: target-aware denoising or joint reconstruc
 
 ## 9. Current conclusion
 
-**Bottom + Inner geometry is sufficient for high-accuracy clean prediction under the tested setup.** Radial noise destroys much of that predictive accuracy. Separate PCA helps clean data but neither joint PCA, tested nonlinear Inner embeddings, nor stable global contour descriptors solve full-noise robustness. **Noise-trained models help, and supervised geometry reconstruction followed by the clean-trained predictor is currently the strongest explored notebook-04 strategy** (R² **0.632186**, MAE **0.008694** on this particular noisy validation split). The next immediate question is whether a reconstruction-aware downstream model can overcome the remaining modulus-range bias.
+**Bottom + Inner geometry is sufficient for high-accuracy clean prediction under the tested setup.** Radial noise destroys much of that predictive accuracy. Separate PCA helps clean data but neither joint PCA, tested nonlinear Inner embeddings, nor stable global contour descriptors solve full-noise robustness. **Noise-trained models help; supervised geometry reconstruction improves performance further; and training the downstream model on cross-fitted reconstructed geometry is currently the strongest explored notebook-04 strategy** (R² **0.7480**, MAE **0.006762** on this particular noisy validation split). The remaining questions are whether modulus-range bias is reduced and whether the gain holds on independent cases and varied noise conditions.
