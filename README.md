@@ -22,3 +22,12 @@ display(results)
 ```
 
 The two generators hold fixed the split, target, Random Forest settings, and bottom-coordinate jitter. Radial noise smoothly perturbs distances from the contour centroid along existing spline-sample rays. Coordinate RMS and MAE are reported because matching a requested Gaussian standard deviation does not guarantee identical realized corruption amplitudes. Further details and experimental history appear in [`DEVELOPMENT_LOG.md`](DEVELOPMENT_LOG.md).
+
+
+## Part1_E shape analysis and geometry denoising (2026-11-03)
+
+The exploratory findings from Colab `04_Shape_Analysis_Comparison.ipynb` (Steps 1–31) are recorded in [**Part1_E Shape Analysis and Denoising — Research Findings**](research/PART1E_SHAPE_ANALYSIS_2026-11-03.md).
+
+On the repeatedly explored 1,302-row validation split under radial noise 0.05 (with bottom jitter 0.01), a supervised Bottom + Inner geometry denoiser followed by the clean-trained Part1_E Random Forest achieved **R² = 0.632186, MAE = 0.008694**, compared with **R² = 0.507630, MAE = 0.010204** for direct radial-noise-specialist prediction. This is an **exploratory validation result, not a final generalization claim**. The report covers clean/PCA baselines, noise ablations, Kernel PCA/autoencoder comparisons, geometry descriptors, regional feature importance, reconstruction diagnostics, limitations, and the proposed unrun Step 32.
+
+The Colab notebook, raw simulation dataset, trained denoiser, and generated figures are not tracked in this repository yet.
