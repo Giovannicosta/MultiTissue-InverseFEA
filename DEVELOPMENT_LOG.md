@@ -2910,3 +2910,14 @@ A detailed research write-up was committed to [`research/PART1E_SHAPE_ANALYSIS_2
 - **Next, NOT yet executed:** Step 32 five-fold out-of-fold reconstruction-aware predictor, followed by independent validation and replication across corruption seeds and intensities. No outcome is claimed for Step 32.
 
 These comparisons do not replace the earlier one-tissue MoE/orchestrator results: they use a different experimental context. Do not claim tissue-count generalization or independent test performance from these exploratory metrics.
+
+
+### 2026-11-03 — Colab 04 Step 32: reconstruction-aware predictor improves Part1_E validation results
+
+The user completed the proposed five-fold OOF reconstruction experiment in `04_Shape_Analysis_Comparison.ipynb`. For each fold, a 100-tree ExtraTrees geometry denoiser was trained using four noisy views per non-held-out original simulation and clean Bottom + Inner coordinate targets, then the held-out simulation geometry was reconstructed from the first noisy view. The 3,906 OOF reconstructed rows were used to train a 100-tree RF Part1_E predictor. On the same explored 1,302-row radial-noisy validation set, the validation geometry came from the prior fully trained Step 28 denoiser (150 ExtraTrees), and the new predictor achieved **R² 0.7480 / MAE 0.006762**.
+
+Comparison: radial direct specialist **0.5076 / 0.010204**; geometry denoiser + clean-trained RF **0.6322 / 0.008694**; denoiser + OOF reconstruction-aware RF **0.7480 / 0.006762**. Relative to the previously best denoiser + clean RF, reconstruction-aware training lowered MAE approximately **22.2%**; relative to the direct radial specialist, by **33.7%**. This is the best reported Colab 04 validation result so far.
+
+The fold denoisers (100 trees, held-out view 1) differ from the deployed validation denoiser (150 trees, four-view fit), so input-distribution consistency warrants testing. All findings are exploratory since the validation set guided repeated model selection; the earlier test split was also inspected. Do not present these as independently validated final-test results. Next: actual-vs-predicted and signed-residual/binned-MAE comparison for the new pipeline, then independent evaluation across noise seeds and cases.
+
+Detailed report: [`research/PART1E_SHAPE_ANALYSIS_2026-11-03.md`](research/PART1E_SHAPE_ANALYSIS_2026-11-03.md).
